@@ -375,3 +375,10 @@ Every feature added to JRM should answer one question:
 If the answer is yes, it aligns with the project's mission.
 
 This project is a mobile first project.
+
+Requirements when building:
+
+- Reusable Components
+- Modular functions
+- Proper server and client rendering
+- Caching (when fetching data)

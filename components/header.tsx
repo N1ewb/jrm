@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { AuthButton } from "@/components/auth-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { hasEnvVars } from "@/lib/utils";
+import UserDropdown from "@/components/user-dropdown";
 import JeepWhite from "@/app/assets/jeep-icon-small-white.png";
 
 export function Header() {
@@ -11,9 +11,9 @@ export function Header() {
     <EnvVarWarning />
   ) : (
     <Suspense
-      fallback={<div className="h-8 w-20 animate-pulse rounded bg-muted" />}
+      fallback={<div className="h-8 w-8 rounded-full bg-primary-foreground/20 animate-pulse" />}
     >
-      <AuthButton />
+      <UserDropdown />
     </Suspense>
   );
 
@@ -54,7 +54,7 @@ export function Header() {
           </Link>
         </div>
         <div className="flex-1" />
-        <div className="hidden lg:flex items-center gap-2">{authSection}</div>
+        <div className="flex items-center gap-2">{authSection}</div>
       </div>
     </>
   );

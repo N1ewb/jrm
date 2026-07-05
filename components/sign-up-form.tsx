@@ -43,9 +43,6 @@ export function SignUpForm({
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        },
       });
       if (error) {
         const msg =
@@ -54,7 +51,7 @@ export function SignUpForm({
             : String(error);
         throw new Error(msg);
       }
-      router.push("/auth/sign-up-success");
+      router.push("/auth/login");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {

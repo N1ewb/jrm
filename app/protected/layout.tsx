@@ -1,27 +1,11 @@
-import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/header";
 import Link from "next/link";
 
-async function AuthGuard({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const role = profile?.role ?? "user";
-
+export default function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="drawer">
       <input id="protected-drawer" type="checkbox" className="drawer-toggle" />
@@ -40,40 +24,68 @@ async function AuthGuard({ children }: { children: React.ReactNode }) {
           className="drawer-overlay"
         />
         <ul className="menu bg-primary min-h-full w-80 p-4 gap-2 text-primary-foreground">
-          <li className="menu-title text-xs text-primary-foreground/60">Routes</li>
-          <li><Link href="/protected/add-route" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">Add Route</Link></li>
-          <li><Link href="/protected/all-routes" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">All Routes</Link></li>
-          <li><Link href="/protected/review-routes" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">Review Community Routes</Link></li>
-          <li className="menu-title text-xs text-primary-foreground/60 mt-4">Account</li>
-          <li><Link href="/protected" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">Settings &amp; Notifications</Link></li>
-          {(role === "admin" || role === "gov_official") && (
-            <>
-              <li className="menu-title text-xs text-primary-foreground/60 mt-4">Admin</li>
-              <li><Link href="/protected/admin" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">Admin Dashboard</Link></li>
-            </>
-          )}
-          <li className="menu-title text-xs text-primary-foreground/60 mt-4">Community</li>
-          <li><Link href="/protected/support" className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg">Support Us</Link></li>
+          <li className="menu-title text-xs text-primary-foreground/60">
+            Routes
+          </li>
+          <li>
+            <Link
+              href="/protected/add-route"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              Add Route
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/protected/all-routes"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              All Routes
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/protected/review-routes"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              Review Community Routes
+            </Link>
+          </li>
+          <li className="menu-title text-xs text-primary-foreground/60 mt-4">
+            Account
+          </li>
+          <li>
+            <Link
+              href="/protected"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              Settings &amp; Notifications
+            </Link>
+          </li>
+          <li className="menu-title text-xs text-primary-foreground/60 mt-4">
+            Admin
+          </li>
+          <li>
+            <Link
+              href="/protected/admin"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              Admin Dashboard
+            </Link>
+          </li>
+          <li className="menu-title text-xs text-primary-foreground/60 mt-4">
+            Community
+          </li>
+          <li>
+            <Link
+              href="/protected/support"
+              className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+            >
+              Support Us
+            </Link>
+          </li>
         </ul>
       </div>
     </div>
-  );
-}
-
-export default function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-dvh flex items-center justify-center bg-background">
-          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
-        </div>
-      }
-    >
-      <AuthGuard>{children}</AuthGuard>
-    </Suspense>
   );
 }

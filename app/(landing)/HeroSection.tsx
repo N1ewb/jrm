@@ -6,7 +6,6 @@ import HeroMap from "../assets/undraw_navigation_0q48.png";
 function HeroSection() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#250057] via-[#5000BD] to-[#250057] opacity-5" />
       <div className="max-w-6xl mx-auto px-5 py-20 lg:py-32">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 text-center lg:text-left">
@@ -16,9 +15,9 @@ function HeroSection() {
               <span className="text-[#250057]">Iligan City</span>
             </h1>
             <p className="text-base text-muted-foreground mt-4 max-w-lg mx-auto lg:mx-0">
-              Community-powered navigation for Philippine public
-              transportation. Find routes, calculate fares, and contribute to
-              the most accurate jeepney map.
+              Community-powered navigation for Philippine public transportation.
+              Find routes, calculate fares, and contribute to the most accurate
+              jeepney map.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center lg:justify-start">
               <Link

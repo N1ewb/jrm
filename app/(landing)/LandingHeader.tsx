@@ -51,7 +51,7 @@ function LandingHeader() {
           </Link>
           <Link
             href="/auth/sign-up"
-            className="btn text-sm btn-sm bg-white text-[#250057] hover:bg-white/90 border-none"
+            className="btn text-sm btn-sm bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-none"
           >
             Get Started
           </Link>
@@ -75,7 +75,7 @@ function LandingHeader() {
             onClick={close}
           />
           <div
-            className={`relative w-80 max-w-[80vw] bg-[#250057] h-full p-6 shadow-xl transition-transform duration-300 ease-out ${
+            className={`relative w-80 max-w-[80vw] bg-primary h-full p-6 shadow-xl transition-transform duration-300 ease-out ${
               transitionIn ? "translate-x-0" : "-translate-x-full"
             }`}
           >

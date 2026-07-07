@@ -54,10 +54,10 @@ function createUserMarker(): {
 } {
   const el = document.createElement("div");
   el.style.cssText =
-    "width:20px;height:20px;border-radius:50%;background:#250057;border:3px solid white;box-shadow:0 0 0 4px rgba(37,0,87,0.3);";
+    "width:20px;height:20px;border-radius:50%;background:var(--color-primary);border:3px solid white;box-shadow:0 0 0 4px color-mix(in srgb, var(--color-primary) 30%, transparent);";
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    "width:60px;height:60px;border-radius:50%;background:rgba(37,0,87,0.1);position:absolute;top:-20px;left:-20px;animation:pulse 2s infinite;";
+    "width:60px;height:60px;border-radius:50%;background:color-mix(in srgb, var(--color-primary) 10%, transparent);position:absolute;top:-20px;left:-20px;animation:pulse 2s infinite;";
   el.appendChild(pulse);
   const marker = new maplibregl.Marker({ element: el });
   return { element: el, marker };

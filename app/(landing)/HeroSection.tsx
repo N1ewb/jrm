@@ -11,8 +11,8 @@ function HeroSection() {
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">
               Navigate the{" "}
-              <span className="text-[#5000BD]">Jeepney Routes</span> of{" "}
-              <span className="text-[#250057]">Iligan City</span>
+              <span className="text-secondary">Jeepney Routes</span> of{" "}
+              <span className="text-primary">Iligan City</span>
             </h1>
             <p className="text-base text-muted-foreground mt-4 max-w-lg mx-auto lg:mx-0">
               Community-powered navigation for Philippine public transportation.
@@ -22,7 +22,7 @@ function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center lg:justify-start">
               <Link
                 href="/auth/sign-up"
-                className="h-12 px-8 rounded-xl bg-[#250057] text-white font-medium text-sm hover:bg-[#250057]/90 transition-colors inline-flex items-center justify-center"
+                className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center"
               >
                 Get Started
               </Link>
@@ -49,8 +49,8 @@ function HeroSection() {
         <div className="max-w-6xl mx-auto px-5 py-12">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="w-10 h-10 rounded-xl bg-[#250057]/10 flex items-center justify-center mx-auto">
-                <Route size={20} className="text-[#250057]" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                <Route size={20} className="text-primary" />
               </div>
               <p className="text-sm font-semibold text-foreground mt-2">
                 Route Finder
@@ -60,8 +60,8 @@ function HeroSection() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-10 h-10 rounded-xl bg-[#5000BD]/10 flex items-center justify-center mx-auto">
-                <Navigation size={20} className="text-[#5000BD]" />
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto">
+                <Navigation size={20} className="text-secondary" />
               </div>
               <p className="text-sm font-semibold text-foreground mt-2">
                 GPS Navigation
@@ -71,8 +71,8 @@ function HeroSection() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-10 h-10 rounded-xl bg-[#250057]/10 flex items-center justify-center mx-auto">
-                <MapPin size={20} className="text-[#250057]" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                <MapPin size={20} className="text-primary" />
               </div>
               <p className="text-sm font-semibold text-foreground mt-2">
                 Fare Calculator
@@ -82,8 +82,8 @@ function HeroSection() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-10 h-10 rounded-xl bg-[#5000BD]/10 flex items-center justify-center mx-auto">
-                <Users size={20} className="text-[#5000BD]" />
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mx-auto">
+                <Users size={20} className="text-secondary" />
               </div>
               <p className="text-sm font-semibold text-foreground mt-2">
                 Community Driven

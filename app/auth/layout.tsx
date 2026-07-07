@@ -7,7 +7,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-dvh flex flex-col bg-background">
-      <div className="flex bg-[#250057] px-5 py-2">
+      <div className="flex bg-primary px-5 py-2">
         <LandingHeader />
       </div>
 

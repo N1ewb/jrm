@@ -14,7 +14,7 @@ export function Header() {
 
   return (
     <>
-      <div className="navbar bg-[#250057] w-full">
+      <div className="navbar bg-primary w-full">
         <div className="flex-none lg:hidden">
           <label
             htmlFor="protected-drawer"

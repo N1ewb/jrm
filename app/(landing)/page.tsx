@@ -7,7 +7,7 @@ export default function LandingPage() {
     <div className="flex flex-col">
       <HeroSection />
 
-      <section className="py-20 bg-[#250057]">
+      <section className="py-20 bg-primary">
         <div className="max-w-6xl mx-auto px-5 text-center">
           <h2 className="text-2xl lg:text-3xl font-bold text-white">
             How It Works
@@ -73,7 +73,7 @@ export default function LandingPage() {
                 ].map((line) => (
                   <span
                     key={line}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-[#5000BD]/10 text-[#5000BD]"
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary"
                   >
                     {line}
                   </span>
@@ -82,7 +82,7 @@ export default function LandingPage() {
             </div>
             <div className="flex-1 max-w-sm">
               <div className="rounded-2xl bg-muted/50 p-6 border border-border">
-                <DollarSign size={32} className="text-[#5000BD]" />
+                <DollarSign size={32} className="text-secondary" />
                 <h3 className="font-semibold text-foreground mt-3">
                   Transparent Fare System
                 </h3>
@@ -124,7 +124,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center">
             <Link
               href="/auth/sign-up"
-              className="h-12 px-8 rounded-xl bg-[#250057] text-white font-medium text-sm hover:bg-[#250057]/90 transition-colors inline-flex items-center justify-center"
+              className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center"
             >
               Create Account
             </Link>
@@ -141,7 +141,7 @@ export default function LandingPage() {
       <footer className="border-t border-border bg-background py-8">
         <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin size={14} className="text-[#5000BD]" />
+            <MapPin size={14} className="text-secondary" />
             <span className="font-semibold text-foreground">JRM</span>
             <span>Jeep Route Maps</span>
           </div>

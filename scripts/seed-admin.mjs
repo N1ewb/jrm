@@ -1,10 +1,15 @@
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://dawyfazhbxhajhvrcvuy.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W358KManC8WWDAy9QuZSxQ_RUR9l7YQ";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const EMAIL = process.env.ADMIN_EMAIL;
+const PASSWORD = process.env.ADMIN_PASSWORD;
 
-const EMAIL = "admin@admin.com";
-const PASSWORD = "admin1";
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !EMAIL || !PASSWORD) {
+  console.error("Missing required env vars: SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL, ADMIN_PASSWORD");
+  process.exit(1);
+}
 
 async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -64,7 +69,7 @@ async function setProfile(supabase, userId) {
   }
 
   console.log("Profile set to admin for user:", userId);
-  console.log("Admin account ready! Email: admin@admin.com / Password: admin1");
+  console.log(`Admin account ready! Email: ${EMAIL} / Password: ${PASSWORD}`);
 }
 
 main();

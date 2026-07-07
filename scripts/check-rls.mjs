@@ -1,14 +1,22 @@
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://dawyfazhbxhajhvrcvuy.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W358KManC8WWDAy9QuZSxQ_RUR9l7YQ";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error("Missing required env vars: SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL, ADMIN_PASSWORD");
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function main() {
   const { data: { user }, error } = await supabase.auth.signInWithPassword({
-    email: "admin@admin.com",
-    password: "admin1",
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
   });
 
   if (error) {

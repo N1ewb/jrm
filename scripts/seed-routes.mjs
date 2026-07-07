@@ -1,10 +1,15 @@
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://dawyfazhbxhajhvrcvuy.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W358KManC8WWDAy9QuZSxQ_RUR9l7YQ";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-const ADMIN_EMAIL = "admin@admin.com";
-const ADMIN_PASSWORD = "admin1";
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error("Missing required env vars: SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL, ADMIN_PASSWORD");
+  process.exit(1);
+}
 
 // Iligan jeepney routes with realistic waypoints
 const DUMMY_ROUTES = [

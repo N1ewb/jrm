@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DrawerLink } from "@/components/drawer-link";
 
-export default function AdminLayout({
+export default function SharedLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -13,14 +13,14 @@ export default function AdminLayout({
         <div className="p-4 pt-4">
           <ul className="menu gap-2 text-primary-foreground">
             <li className="menu-title text-xs text-primary-foreground/60 px-4">
-              Routes
+              Navigation
             </li>
             <li>
               <DrawerLink
                 href="/protected/add-route"
                 className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
               >
-                Add Route
+                Submit a Route
               </DrawerLink>
             </li>
             <li>
@@ -33,10 +33,10 @@ export default function AdminLayout({
             </li>
             <li>
               <DrawerLink
-                href="/protected/review-routes"
+                href="/protected/community-routes"
                 className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
               >
-                Review Community Routes
+                Community Routes
               </DrawerLink>
             </li>
             <li className="menu-title text-xs text-primary-foreground/60 mt-4 px-4">
@@ -48,17 +48,6 @@ export default function AdminLayout({
                 className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
               >
                 Settings &amp; Notifications
-              </DrawerLink>
-            </li>
-            <li className="menu-title text-xs text-primary-foreground/60 mt-4 px-4">
-              Admin
-            </li>
-            <li>
-              <DrawerLink
-                href="/protected/admin"
-                className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
-              >
-                Admin Dashboard
               </DrawerLink>
             </li>
             <li className="menu-title text-xs text-primary-foreground/60 mt-4 px-4">
@@ -84,10 +73,10 @@ export default function AdminLayout({
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-primary text-primary-foreground border-t border-primary-foreground/10">
         <div className="flex justify-around items-center h-16 px-2">
           <Link
-            href="/protected/admin"
+            href="/protected/user"
             className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span>Dashboard</span>
           </Link>
           <Link
@@ -105,7 +94,7 @@ export default function AdminLayout({
             <span>Routes</span>
           </Link>
           <Link
-            href="/protected/review-routes"
+            href="/protected/community-routes"
             className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>

@@ -17,7 +17,7 @@ export function DrawerLink({
       className={className}
       onClick={() => {
         const el = document.getElementById(
-          "protected-drawer",
+          "sidebar-toggle",
         ) as HTMLInputElement | null;
         if (el) el.checked = false;
       }}

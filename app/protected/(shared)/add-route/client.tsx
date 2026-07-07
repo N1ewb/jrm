@@ -32,14 +32,14 @@ export default function AddRouteClient() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 flex-1">
-      <div className="flex-1 rounded-xl overflow-hidden border border-border min-h-[300px] lg:min-h-0">
+      <div className="rounded-xl overflow-hidden border border-border h-[50vh] lg:h-[calc(100vh-14rem)] lg:flex-1">
         <MapRouteDraw
           onRouteComplete={handleRouteComplete}
           onReset={handleReset}
         />
       </div>
 
-      <div className="w-full lg:w-96 shrink-0">
+      <div className="w-full lg:w-96 shrink-0 lg:overflow-y-auto">
         {routeCoords ? (
           <RouteInfoForm
             routeCoords={routeCoords}

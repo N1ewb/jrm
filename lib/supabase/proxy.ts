@@ -60,6 +60,13 @@ export async function updateSession(request: NextRequest) {
     }
   } catch {}
 
+  // Expose role to layouts via request cookie (no httpOnly)
+  request.cookies.set("user-role", role);
+  supabaseResponse.cookies.set("user-role", role, {
+    path: "/",
+    sameSite: "lax",
+  });
+
   // On landing/auth page – push to designated route
   if (isPublicPath) {
     const url = request.nextUrl.clone();

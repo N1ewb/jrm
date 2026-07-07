@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 import { calculateRouteDistance, haversineDistance } from "@/lib/route-calc";
 import { RotateCcw, Check, Loader2, AlertCircle, Undo2 } from "lucide-react";
@@ -177,7 +178,11 @@ export default function MapRouteDraw({ onRouteComplete, onReset }: RouteDrawProp
       e.preventDefault();
       handleUndo();
     }
-  }, [handleUndo]);
+    if (e.key === "Enter" && statusRef.current === "drawing" && points.current.length >= 3) {
+      e.preventDefault();
+      handleForceComplete();
+    }
+  }, [handleUndo, handleForceComplete]);
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -211,7 +216,7 @@ export default function MapRouteDraw({ onRouteComplete, onReset }: RouteDrawProp
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
 
-      {isDrawing && (
+      {isDrawing && points.current.length === 0 && (
         <div className="absolute top-4 left-4 right-4 z-10 max-w-md mx-auto">
           <div className="bg-white dark:bg-card rounded-xl shadow-lg px-4 py-3 border border-border/50 text-center">
             <p className="text-sm font-medium text-foreground">
@@ -257,6 +262,13 @@ export default function MapRouteDraw({ onRouteComplete, onReset }: RouteDrawProp
             Ctrl+Z
           </span>
         </button>
+      )}
+
+      {/* Keyboard hint for Enter — desktop */}
+      {isDrawing && points.current.length >= 3 && (
+        <div className="absolute top-20 right-4 z-10 hidden lg:flex items-center gap-1.5 bg-white dark:bg-card px-3 py-1.5 rounded-full shadow-lg border border-border/50 text-xs text-muted-foreground">
+          Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[11px]">Enter</kbd> to finish
+        </div>
       )}
 
       <div className="absolute bottom-6 left-4 right-4 z-10 max-w-md mx-auto">

@@ -13,7 +13,6 @@ import {
   ClipboardList,
   Shield,
   Heart,
-  Menu,
 } from "lucide-react";
 
 function NavItem({
@@ -55,10 +54,30 @@ function NavSection({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({
+  sidebarOpen,
+  onClose,
+}: {
+  sidebarOpen: boolean;
+  onClose: () => void;
+}) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [transitionIn, setTransitionIn] = useState(false);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      setMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setTransitionIn(true));
+      });
+    } else {
+      setTransitionIn(false);
+      const timer = setTimeout(() => setMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [sidebarOpen]);
 
   useEffect(() => {
     async function fetchRole() {
@@ -94,24 +113,20 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger */}
-      <button
-        type="button"
-        onClick={() => setSidebarOpen(true)}
-        className="fixed bottom-6 left-4 z-40 lg:hidden w-12 h-12 flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl"
-        aria-label="Open menu"
-      >
-        <Menu size={22} />
-      </button>
-
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {mounted && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setSidebarOpen(false)}
+            className={`absolute inset-0 transition-opacity duration-300 ${
+              transitionIn ? "opacity-100" : "opacity-0"
+            } bg-black/40`}
+            onClick={onClose}
           />
-          <div className="relative w-80 max-w-[80vw] bg-primary h-full p-4 shadow-xl overflow-y-auto">
+          <div
+            className={`absolute left-0 top-0 h-full transition-transform duration-300 ease-out ${
+              transitionIn ? "translate-x-0" : "-translate-x-full"
+            } w-80 max-w-[80vw] bg-primary p-4 shadow-xl overflow-y-auto`}
+          >
             <ul className="menu w-full gap-2 text-primary-foreground">
               {isAdmin ? <AdminItems pathname={pathname} /> : <UserItems pathname={pathname} />}
             </ul>

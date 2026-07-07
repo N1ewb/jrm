@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 
 const OSRM_BASE = "https://router.project-osrm.org";
 
@@ -36,6 +35,8 @@ export async function saveRoute(input: SaveRouteInput) {
     eta_min: input.etaMin,
     fare_php: input.farePhp,
     waypoints: input.waypoints,
+    status: "pending",
+    version: 1,
   });
 
   if (error) {
@@ -43,7 +44,6 @@ export async function saveRoute(input: SaveRouteInput) {
     return { error: "Failed to save route. Please try again." };
   }
 
-  revalidatePath("/protected/all-routes");
   return { success: true };
 }
 
@@ -62,47 +62,93 @@ export async function getRoutes() {
   return { routes: data };
 }
 
-export async function acceptRoute(routeId: string) {
+async function requireAdmin() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "You must be signed in" };
+  if (!user) return { error: "You must be signed in", supabase: null as any };
 
-  const { error } = await supabase
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || (profile.role !== "admin" && profile.role !== "gov_official")) {
+    return { error: "Only admins can perform this action", supabase: null as any };
+  }
+
+  return { supabase, error: null };
+}
+
+export async function acceptRoute(routeId: string) {
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
+
+  const { data, error: updateError } = await supabase
     .from("routes")
     .update({ status: "active" })
-    .eq("id", routeId);
+    .eq("id", routeId)
+    .select("id");
 
-  if (error) {
-    console.error("Failed to accept route:", error);
+  if (updateError) {
+    console.error("Failed to accept route:", updateError);
     return { error: "Failed to accept route" };
   }
 
-  revalidatePath("/protected/all-routes");
+  if (!data || data.length === 0) {
+    console.error("acceptRoute: RLS blocked update — no rows affected");
+    return { error: "Database permission denied. Run the SQL migration to fix RLS policies (see scripts/migrations/001-add-rls-policies.sql)." };
+  }
+
+  return { success: true };
+}
+
+export async function rejectRoute(routeId: string) {
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
+
+  const { data, error: updateError } = await supabase
+    .from("routes")
+    .update({ status: "rejected" })
+    .eq("id", routeId)
+    .select("id");
+
+  if (updateError) {
+    console.error("Failed to reject route:", updateError);
+    return { error: "Failed to reject route" };
+  }
+
+  if (!data || data.length === 0) {
+    console.error("rejectRoute: RLS blocked update — no rows affected");
+    return { error: "Database permission denied. Run the SQL migration to fix RLS policies (see scripts/migrations/001-add-rls-policies.sql)." };
+  }
+
   return { success: true };
 }
 
 export async function deleteRoute(routeId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
 
-  if (!user) return { error: "You must be signed in" };
-
-  const { error } = await supabase
+  const { data, error: deleteError } = await supabase
     .from("routes")
     .delete()
-    .eq("id", routeId);
+    .eq("id", routeId)
+    .select("id");
 
-  if (error) {
-    console.error("Failed to delete route:", error);
+  if (deleteError) {
+    console.error("Failed to delete route:", deleteError);
     return { error: "Failed to delete route" };
   }
 
-  revalidatePath("/protected/all-routes");
+  if (!data || data.length === 0) {
+    console.error("deleteRoute: RLS blocked delete — no rows affected");
+    return { error: "Database permission denied. Run the SQL migration to fix RLS policies (see scripts/migrations/001-add-rls-policies.sql)." };
+  }
+
   return { success: true };
 }
 

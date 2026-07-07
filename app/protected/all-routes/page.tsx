@@ -16,9 +16,7 @@ async function RoutesContent() {
   if (!result.routes || result.routes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-xl font-semibold text-foreground">
-          No Routes Yet
-        </h2>
+        <h2 className="text-xl font-semibold text-foreground">No Routes Yet</h2>
         <p className="text-sm text-muted-foreground mt-2">
           Routes submitted by the community will appear here.
         </p>

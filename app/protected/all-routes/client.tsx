@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -21,9 +21,11 @@ import {
   ChevronLeft,
   Info,
   CheckCircle2,
+  XCircle,
   Trash2,
   Loader2,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const RouteDetailMap = dynamic(
   () => import("@/components/route-detail-map"),
@@ -129,28 +131,96 @@ export function AllRoutesClient({ routes }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Route | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchRole() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      setUserRole(data?.role ?? "user");
+    }
+    fetchRole();
+  }, []);
+
+  const isAdmin = userRole === "admin" || userRole === "gov_official";
+
+  function updateSelectedStatus(routeId: string, status: string) {
+    setSelected((prev) =>
+      prev?.id === routeId ? { ...prev, status } : prev,
+    );
+  }
 
   const handleAccept = useCallback(async (routeId: string) => {
     setActionLoading(routeId);
-    const { acceptRoute } = await import("@/actions/map.actions");
-    const result = await acceptRoute(routeId);
-    setActionLoading(null);
 
-    if (result.success) {
+    try {
+      const { acceptRoute } = await import("@/actions/map.actions");
+      const result = await acceptRoute(routeId);
+
+      if (result.error) {
+        alert(result.error);
+        setActionLoading(null);
+        return;
+      }
+
+      updateSelectedStatus(routeId, "active");
+      setActionLoading(null);
       router.refresh();
+    } catch {
+      alert("Failed to accept route. Please try again.");
+      setActionLoading(null);
+    }
+  }, [router]);
+
+  const handleReject = useCallback(async (routeId: string) => {
+    if (!window.confirm("Reject this route? It will be marked as rejected.")) return;
+    setActionLoading(routeId);
+
+    try {
+      const { rejectRoute } = await import("@/actions/map.actions");
+      const result = await rejectRoute(routeId);
+
+      if (result.error) {
+        alert(result.error);
+        setActionLoading(null);
+        return;
+      }
+
+      updateSelectedStatus(routeId, "rejected");
+      setActionLoading(null);
+      router.refresh();
+    } catch {
+      alert("Failed to reject route. Please try again.");
+      setActionLoading(null);
     }
   }, [router]);
 
   const handleDelete = useCallback(async (routeId: string) => {
-    if (!window.confirm("Delete this route? This cannot be undone.")) return;
+    if (!window.confirm("Permanently delete this route? This cannot be undone.")) return;
     setActionLoading(routeId);
-    const { deleteRoute } = await import("@/actions/map.actions");
-    const result = await deleteRoute(routeId);
-    setActionLoading(null);
 
-    if (result.success) {
+    try {
+      const { deleteRoute } = await import("@/actions/map.actions");
+      const result = await deleteRoute(routeId);
+
+      if (result.error) {
+        alert(result.error);
+        setActionLoading(null);
+        return;
+      }
+
+      setActionLoading(null);
       setSelected(null);
       router.refresh();
+    } catch {
+      alert("Failed to delete route. Please try again.");
+      setActionLoading(null);
     }
   }, [router]);
 
@@ -243,35 +313,59 @@ export function AllRoutesClient({ routes }: Props) {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2 pt-2">
-                {isPending && (
+                {isPending && isAdmin && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => handleAccept(selected.id)}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={14} />
+                      )}
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={() => handleReject(selected.id)}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <XCircle size={14} />
+                      )}
+                      Reject
+                    </Button>
+                  </>
+                )}
+                {isPending && !isAdmin && (
+                  <p className="text-xs text-muted-foreground text-center w-full py-2">
+                    Awaiting admin review
+                  </p>
+                )}
+                {!isPending && isAdmin && (
                   <Button
                     size="sm"
+                    variant="destructive"
                     className="flex-1"
-                    onClick={() => handleAccept(selected.id)}
+                    onClick={() => handleDelete(selected.id)}
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
-                      <CheckCircle2 size={14} />
+                      <Trash2 size={14} />
                     )}
-                    Accept
+                    Delete
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className={isPending ? "" : "flex-1"}
-                  onClick={() => handleDelete(selected.id)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={14} />
-                  )}
-                  Delete
-                </Button>
               </CardFooter>
             </Card>
           </div>

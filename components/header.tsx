@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { EnvVarWarning } from "@/components/env-var-warning";
@@ -10,11 +9,7 @@ export function Header() {
   const authSection = !hasEnvVars ? (
     <EnvVarWarning />
   ) : (
-    <Suspense
-      fallback={<div className="h-8 w-8 rounded-full bg-primary-foreground/20 animate-pulse" />}
-    >
-      <UserDropdown />
-    </Suspense>
+    <UserDropdown />
   );
 
   return (

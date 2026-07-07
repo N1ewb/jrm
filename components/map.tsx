@@ -51,35 +51,38 @@ export default function Map() {
     setLocationStatus("loading");
     setIsLocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords;
-        setLocationStatus("granted");
-        setIsLocating(false);
+    function placeMarker(lng: number, lat: number) {
+      if (!mapInstance.current) return;
+      flyToLocation(lng, lat);
+      if (markerRef.current) markerRef.current.remove();
+      const el = document.createElement("div");
+      el.className = "user-location-pulse";
+      markerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([lng, lat])
+        .addTo(mapInstance.current);
+    }
 
-        if (!mapInstance.current) return;
+    function onPosition(pos: GeolocationPosition) {
+      const { longitude, latitude, accuracy } = pos.coords;
+      setLocationStatus("granted");
+      setIsLocating(false);
+      placeMarker(longitude, latitude);
+    }
 
-        flyToLocation(longitude, latitude);
+    function onError(err: GeolocationPositionError) {
+      setIsLocating(false);
+      if (err.code === err.PERMISSION_DENIED) {
+        setLocationStatus("denied");
+      } else {
+        setLocationStatus("error");
+      }
+    }
 
-        if (markerRef.current) markerRef.current.remove();
-
-        const el = document.createElement("div");
-        el.className = "user-location-pulse";
-
-        markerRef.current = new maplibregl.Marker({ element: el })
-          .setLngLat([longitude, latitude])
-          .addTo(mapInstance.current);
-      },
-      (err) => {
-        setIsLocating(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocationStatus("denied");
-        } else {
-          setLocationStatus("error");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    navigator.geolocation.getCurrentPosition(onPosition, onError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    });
   }, [flyToLocation]);
 
   return (

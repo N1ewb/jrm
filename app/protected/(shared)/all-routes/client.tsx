@@ -24,8 +24,11 @@ import {
   XCircle,
   Trash2,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import VoteButtons from "@/components/vote-buttons";
+import CommentThread from "@/components/comment-thread";
+import type { CommentRow } from "@/actions/discussion.actions";
 import { createClient } from "@/lib/supabase/client";
 
 const RouteDetailMap = dynamic(
@@ -56,6 +59,7 @@ interface Route {
   created_at: string;
   upvotes: number;
   downvotes: number;
+  comment_count: number;
 }
 
 interface Props {
@@ -132,10 +136,14 @@ function RouteCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-          <User size={13} />
-          <span className="truncate">
-            {route.author_email ?? "Unknown"}
+        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <User size={13} />
+            <span className="truncate">{route.author_email ?? "Unknown"}</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <MessageSquare size={13} />
+            {route.comment_count}
           </span>
         </div>
       </div>
@@ -149,6 +157,8 @@ export function AllRoutesClient({ routes }: Props) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>({});
+  const [comments, setComments] = useState<CommentRow[]>([]);
+  const [myCommentVotes, setMyCommentVotes] = useState<Record<string, -1 | 0 | 1>>({});
 
   useEffect(() => {
     async function fetchRole() {
@@ -173,6 +183,22 @@ export function AllRoutesClient({ routes }: Props) {
   }, [routes]);
 
   const isAdmin = userRole === "admin" || userRole === "gov_official";
+
+  const loadComments = useCallback(async (routeId: string) => {
+    const { getComments } = await import("@/actions/discussion.actions");
+    const result = await getComments(routeId);
+    setComments(result.comments);
+    setMyCommentVotes(result.myVotes);
+  }, []);
+
+  useEffect(() => {
+    if (selected) {
+      loadComments(selected.id);
+    } else {
+      setComments([]);
+      setMyCommentVotes({});
+    }
+  }, [selected, loadComments]);
 
   function updateSelectedStatus(routeId: string, status: string) {
     setSelected((prev) =>
@@ -403,6 +429,16 @@ export function AllRoutesClient({ routes }: Props) {
               </CardFooter>
             </Card>
           </div>
+        </div>
+
+        {/* Comments section */}
+        <div className="border border-border rounded-xl bg-card p-4">
+          <CommentThread
+            routeId={selected.id}
+            comments={comments}
+            myVotes={myCommentVotes}
+            onRefresh={() => loadComments(selected.id)}
+          />
         </div>
       </div>
     );

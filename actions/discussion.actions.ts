@@ -122,19 +122,22 @@ export async function getComments(routeId: string): Promise<{
     return { comments: [], myVotes: {} };
   }
 
-  const mapped: CommentRow[] = (comments ?? []).map((c: any) => ({
-    id: c.id,
-    route_id: c.route_id,
-    user_id: c.user_id,
-    body: c.body,
-    parent_id: c.parent_id,
-    created_at: c.created_at,
-    updated_at: c.updated_at,
-    is_hidden: c.is_hidden,
-    upvotes: c.upvotes,
-    downvotes: c.downvotes,
-    author_email: c.author?.email ?? "Unknown",
-  }));
+  const mapped: CommentRow[] = (comments ?? []).map((c: Record<string, unknown>) => {
+    const author = c.author as { email?: string } | null;
+    return {
+      id: c.id as string,
+      route_id: c.route_id as string,
+      user_id: c.user_id as string,
+      body: c.body as string,
+      parent_id: (c.parent_id as string) ?? null,
+      created_at: c.created_at as string,
+      updated_at: (c.updated_at as string) ?? null,
+      is_hidden: c.is_hidden as boolean,
+      upvotes: c.upvotes as number,
+      downvotes: c.downvotes as number,
+      author_email: author?.email ?? "Unknown",
+    };
+  });
 
   // Fetch my votes
   let myVotes: Record<string, -1 | 0 | 1> = {};

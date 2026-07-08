@@ -9,6 +9,10 @@ interface VoteButtonsProps {
   initialDownvotes: number;
   initialMyVote: -1 | 0 | 1;
   onVote?: (upvotes: number, downvotes: number) => void;
+  /** Override the voting action (e.g., for comment voting) */
+  voteAction?: (id: string, vote: -1 | 0 | 1) => Promise<
+    { upvotes: number; downvotes: number } | { error: string }
+  >;
   size?: "sm" | "md";
 }
 
@@ -18,6 +22,7 @@ export default function VoteButtons({
   initialDownvotes,
   initialMyVote,
   onVote,
+  voteAction,
   size = "sm",
 }: VoteButtonsProps) {
   const [myVote, setMyVote] = useState<-1 | 0 | 1>(initialMyVote);
@@ -52,11 +57,12 @@ export default function VoteButtons({
       setLoading(true);
 
       try {
-        const { voteRoute } = await import("@/actions/vote.actions");
-        const result = await voteRoute(routeId, newVote);
+        const action =
+          voteAction ??
+          (await import("@/actions/vote.actions")).voteRoute;
+        const result = await action(routeId, newVote);
 
         if ("error" in result) {
-          // Revert on error
           setMyVote(prevMyVote);
           setUpvotes(prevUpvotes);
           setDownvotes(prevDownvotes);
@@ -74,7 +80,7 @@ export default function VoteButtons({
         setLoading(false);
       }
     },
-    [routeId, myVote, upvotes, downvotes, loading, onVote],
+    [routeId, myVote, upvotes, downvotes, loading, onVote, voteAction],
   );
 
   const iconSize = size === "md" ? 18 : 14;

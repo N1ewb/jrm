@@ -25,6 +25,7 @@ import {
   Trash2,
   Loader2,
 } from "lucide-react";
+import VoteButtons from "@/components/vote-buttons";
 import { createClient } from "@/lib/supabase/client";
 
 const RouteDetailMap = dynamic(
@@ -53,6 +54,8 @@ interface Route {
   status: string;
   version: number;
   created_at: string;
+  upvotes: number;
+  downvotes: number;
 }
 
 interface Props {
@@ -67,9 +70,11 @@ const statusColors: Record<string, string> = {
 
 function RouteCard({
   route,
+  myVote,
   onClick,
 }: {
   route: Route;
+  myVote: -1 | 0 | 1;
   onClick: () => void;
 }) {
   return (
@@ -88,13 +93,24 @@ function RouteCard({
               {route.start_point}
             </p>
           </div>
-          <Badge
-            className={
-              statusColors[route.status] ?? "bg-gray-100 text-gray-800"
-            }
-          >
-            {route.status}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <div onClick={(e) => e.stopPropagation()}>
+              <VoteButtons
+                routeId={route.id}
+                initialUpvotes={route.upvotes}
+                initialDownvotes={route.downvotes}
+                initialMyVote={myVote}
+                size="sm"
+              />
+            </div>
+            <Badge
+              className={
+                statusColors[route.status] ?? "bg-gray-100 text-gray-800"
+              }
+            >
+              {route.status}
+            </Badge>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
@@ -132,6 +148,7 @@ export function AllRoutesClient({ routes }: Props) {
   const [selected, setSelected] = useState<Route | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>({});
 
   useEffect(() => {
     async function fetchRole() {
@@ -147,6 +164,13 @@ export function AllRoutesClient({ routes }: Props) {
     }
     fetchRole();
   }, []);
+
+  useEffect(() => {
+    if (routes.length === 0) return;
+    import("@/actions/vote.actions").then(({ getMyVotes }) => {
+      getMyVotes(routes.map((r) => r.id)).then(setMyVotes);
+    });
+  }, [routes]);
 
   const isAdmin = userRole === "admin" || userRole === "gov_official";
 
@@ -271,6 +295,16 @@ export function AllRoutesClient({ routes }: Props) {
                     {selected.status}
                   </Badge>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Votes</span>
+                  <VoteButtons
+                    routeId={selected.id}
+                    initialUpvotes={selected.upvotes}
+                    initialDownvotes={selected.downvotes}
+                    initialMyVote={myVotes[selected.id] ?? 0}
+                    size="sm"
+                  />
+                </div>
                 <hr className="border-border" />
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Distance</span>
@@ -380,6 +414,7 @@ export function AllRoutesClient({ routes }: Props) {
         <RouteCard
           key={route.id}
           route={route}
+          myVote={myVotes[route.id] ?? 0}
           onClick={() => setSelected(route)}
         />
       ))}

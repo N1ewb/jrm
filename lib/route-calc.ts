@@ -105,6 +105,8 @@ export interface RouteInput {
   eta_min: number;
   fare_php: number;
   waypoints: [number, number][];
+  upvotes?: number;
+  downvotes?: number;
 }
 
 export interface TransferPoint {
@@ -193,6 +195,8 @@ export interface NearbyRoute {
   etaMin: number;
   farePhp: number;
   waypoints: [number, number][];
+  upvotes: number;
+  downvotes: number;
 
   /** Alighting: closest waypoint to the destination */
   alightingDistanceKm: number;
@@ -254,6 +258,8 @@ export function findNearbyRoutes(
       etaMin: route.eta_min,
       farePhp: route.fare_php,
       waypoints: route.waypoints,
+      upvotes: route.upvotes ?? 0,
+      downvotes: route.downvotes ?? 0,
       alightingDistanceKm: alight.distanceKm,
       alightingIndex: alight.index,
       boardingDistanceKm: board.distanceKm,

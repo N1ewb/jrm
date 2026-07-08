@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import {
-  Route, Clock, DollarSign, MapPin, Navigation, Footprints, ArrowRight, ChevronDown, ChevronUp, Play,
+  Route, Clock, DollarSign, MapPin, Navigation, Footprints, ArrowRight, ChevronDown, ChevronUp, Play, Repeat,
 } from "lucide-react";
 import type { NearbyRoute } from "@/lib/route-calc";
+import type { MultiHopJourney } from "@/lib/pathfinding";
+import VoteButtons from "@/components/vote-buttons";
 
 interface RouteSuggestionsProps {
   routes: NearbyRoute[];
+  multiHopRoutes?: MultiHopJourney[];
   placeName: string;
   onFocusRoute: (route: NearbyRoute) => void;
   onStartTrip?: (route: NearbyRoute) => void;
+  myVotes?: Record<string, -1 | 0 | 1>;
 }
 
 function formatDistance(km: number): string {
@@ -30,6 +34,7 @@ function RouteCardCollapsed({
   route,
   rank,
   placeName,
+  myVote,
   isExpanded,
   onToggle,
   onFocus,
@@ -38,6 +43,7 @@ function RouteCardCollapsed({
   route: NearbyRoute;
   rank: number;
   placeName: string;
+  myVote?: -1 | 0 | 1;
   isExpanded: boolean;
   onToggle: () => void;
   onFocus: () => void;
@@ -107,7 +113,16 @@ function RouteCardCollapsed({
           </div>
         </div>
 
-        <div className="shrink-0 mt-1.5">
+        <div className="shrink-0 flex items-center gap-1">
+          <div onClick={(e) => e.stopPropagation()}>
+            <VoteButtons
+              routeId={route.id}
+              initialUpvotes={route.upvotes}
+              initialDownvotes={route.downvotes}
+              initialMyVote={myVote ?? 0}
+              size="sm"
+            />
+          </div>
           {isExpanded ? (
             <ChevronUp size={16} className="text-muted-foreground" />
           ) : (
@@ -195,9 +210,11 @@ function RouteCardCollapsed({
 
 export default function RouteSuggestions({
   routes,
+  multiHopRoutes,
   placeName,
   onFocusRoute,
   onStartTrip,
+  myVotes,
 }: RouteSuggestionsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -232,6 +249,7 @@ export default function RouteSuggestions({
               route={route}
               rank={i + 1}
               placeName={placeName}
+              myVote={myVotes?.[route.id] ?? 0}
               isExpanded={expandedId === route.id}
               onToggle={() => setExpandedId(expandedId === route.id ? null : route.id)}
               onFocus={() => {
@@ -243,6 +261,73 @@ export default function RouteSuggestions({
           </li>
         ))}
       </ul>
+
+      {multiHopRoutes && multiHopRoutes.length > 0 && (
+        <>
+          <div className="px-4 py-2 border-t border-border/50 flex items-center gap-2 bg-muted/20">
+            <Repeat size={14} className="text-primary" />
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              With transfers
+            </p>
+            <span className="text-xs text-muted-foreground ml-auto">
+              {multiHopRoutes.length} found
+            </span>
+          </div>
+
+          <ul className="divide-y divide-border/50">
+            {multiHopRoutes.map((journey, i) => (
+              <li key={`multi-${i}`}>
+                <div className="px-4 py-3 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-orange-600 dark:text-orange-300">
+                      {routes.length + i + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      {journey.segments.map((seg, si) => (
+                        <div key={si} className="flex items-center gap-2 text-sm">
+                          {si > 0 && (
+                            <span className="text-xs text-muted-foreground ml-10">
+                              ⏎ Transfer at {seg.line} stop
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Route size={14} className="text-primary shrink-0" />
+                            <span className="font-medium text-foreground">{seg.line}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {seg.rideDistanceKm.toFixed(1)} km
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Footprints size={12} />
+                          {journey.totalWalkKm < 1
+                            ? `${Math.round(journey.totalWalkKm * 1000)} m`
+                            : `${journey.totalWalkKm.toFixed(1)} km`}{" "}
+                          walk
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {formatTime(journey.totalEtaMin)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign size={12} />
+                          ₱{journey.totalFarePhp}
+                        </span>
+                        <span className="flex items-center gap-1 text-orange-500">
+                          <Repeat size={12} />
+                          {journey.transfers} transfer{journey.transfers > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

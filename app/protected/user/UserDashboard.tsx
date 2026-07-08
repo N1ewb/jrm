@@ -10,7 +10,9 @@ import RouteSuggestions from "@/components/route-suggestions";
 import LocationDeniedOverlay from "@/components/location-denied-overlay";
 import BottomInfoBar from "@/components/bottom-info-bar";
 import { getActiveRoutes, type RouteRow } from "@/actions/route.actions";
-import { findNearbyRoutes, type NearbyRoute } from "@/lib/route-calc";
+import { findNearbyRoutes, findRouteTransfers, type NearbyRoute } from "@/lib/route-calc";
+import { findMultiHopRoutes, type MultiHopJourney } from "@/lib/pathfinding";
+import { ILIGAN_LANDMARKS } from "@/lib/iligan-landmarks";
 import type { PlaceResult } from "@/lib/geocoding";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -78,6 +80,8 @@ export default function UserDashboard() {
   );
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
   const [nearbyRoutes, setNearbyRoutes] = useState<NearbyRoute[]>([]);
+  const [multiHopRoutes, setMultiHopRoutes] = useState<MultiHopJourney[]>([]);
+  const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>({});
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
   const [focusedRouteId, setFocusedRouteId] = useState<string | null>(null);
 
@@ -88,6 +92,13 @@ export default function UserDashboard() {
         : { lat: ILIGAN_CENTER[1], lng: ILIGAN_CENTER[0] },
     [position],
   );
+
+  useEffect(() => {
+    if (nearbyRoutes.length === 0) return;
+    import("@/actions/vote.actions").then(({ getMyVotes }) => {
+      getMyVotes(nearbyRoutes.map((r) => r.id)).then(setMyVotes);
+    });
+  }, [nearbyRoutes]);
 
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
@@ -187,6 +198,50 @@ export default function UserDashboard() {
           "circle-color": "#F97316",
           "circle-stroke-width": 3,
           "circle-stroke-color": "#FFFFFF",
+        },
+      });
+
+      // Landmark pins
+      map.addSource("landmarks-source", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: ILIGAN_LANDMARKS.map((lm) => ({
+            type: "Feature",
+            properties: { name: lm.name, category: lm.category },
+            geometry: { type: "Point", coordinates: [lm.lng, lm.lat] },
+          })),
+        },
+      });
+
+      map.addLayer({
+        id: "landmarks-layer",
+        type: "circle",
+        source: "landmarks-source",
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "#6B7280",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-opacity": 0.7,
+        },
+      });
+
+      map.addLayer({
+        id: "landmarks-label",
+        type: "symbol",
+        source: "landmarks-source",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": 10,
+          "text-offset": [0, -1.5],
+          "text-anchor": "bottom",
+          "text-optional": true,
+        },
+        paint: {
+          "text-color": "#4B5563",
+          "text-halo-color": "#FFFFFF",
+          "text-halo-width": 1,
         },
       });
     });
@@ -391,6 +446,17 @@ export default function UserDashboard() {
           userOrigin,
         );
         setNearbyRoutes(near);
+
+        const origin: [number, number] = userOrigin ?? [place.lng, place.lat];
+        const transfers = findRouteTransfers(typedRoutes);
+        const multi = findMultiHopRoutes(
+          origin,
+          [place.lng, place.lat],
+          typedRoutes,
+          transfers,
+        );
+        setMultiHopRoutes(multi);
+
         updateRoutesOnMap(near, null);
       } finally {
         setIsLoadingRoutes(false);
@@ -402,6 +468,7 @@ export default function UserDashboard() {
   const handleClearPlace = useCallback(() => {
     setSelectedPlace(null);
     setNearbyRoutes([]);
+    setMultiHopRoutes([]);
     setFocusedRouteId(null);
 
     if (placeMarkerRef.current) {
@@ -548,12 +615,14 @@ export default function UserDashboard() {
         )}
 
         {selectedPlace && (
-          <RouteSuggestions
-            routes={nearbyRoutes}
-            placeName={selectedPlace.displayName.split(",")[0]}
-            onFocusRoute={focusRouteOnMap}
-            onStartTrip={handleStartTrip}
-          />
+            <RouteSuggestions
+              routes={nearbyRoutes}
+              multiHopRoutes={multiHopRoutes}
+              placeName={selectedPlace.displayName.split(",")[0]}
+              onFocusRoute={focusRouteOnMap}
+              onStartTrip={handleStartTrip}
+              myVotes={myVotes}
+            />
         )}
       </div>
 

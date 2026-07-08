@@ -12,6 +12,8 @@ export interface RouteRow {
   fare_php: number;
   waypoints: [number, number][];
   status: string;
+  upvotes: number;
+  downvotes: number;
 }
 
 export async function getActiveRoutes() {
@@ -19,7 +21,7 @@ export async function getActiveRoutes() {
 
   const { data, error } = await supabase
     .from("routes")
-    .select("id, line, type, start_point, distance_km, eta_min, fare_php, waypoints, status")
+    .select("id, line, type, start_point, distance_km, eta_min, fare_php, waypoints, status, upvotes, downvotes")
     .eq("status", "active");
 
   if (error) {
@@ -35,7 +37,7 @@ export async function getRouteById(routeId: string) {
 
   const { data, error } = await supabase
     .from("routes")
-    .select("*")
+    .select("id, line, type, start_point, distance_km, eta_min, fare_php, waypoints, status, upvotes, downvotes")
     .eq("id", routeId)
     .maybeSingle();
 

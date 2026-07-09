@@ -43,31 +43,22 @@ export async function voteRoute(
     }
   }
 
-  // Recalculate denormalized counts
-  const { data: counts, error: countError } = await supabase
-    .from("route_votes")
-    .select("vote")
-    .eq("route_id", routeId);
+  // Recalculate denormalized counts via SECURITY DEFINER RPC (bypasses RLS)
+  const { data, error: rpcError } = await supabase.rpc("update_route_vote_counts", {
+    p_route_id: routeId,
+  });
 
-  if (countError) {
-    console.error("Failed to fetch vote counts:", countError);
-    return { error: "Failed to fetch vote counts" };
-  }
-
-  const upvotes = counts.filter((r) => r.vote === 1).length;
-  const downvotes = counts.filter((r) => r.vote === -1).length;
-
-  const { error: updateError } = await supabase
-    .from("routes")
-    .update({ upvotes, downvotes })
-    .eq("id", routeId);
-
-  if (updateError) {
-    console.error("Failed to update route counts:", updateError);
+  if (rpcError) {
+    console.error("Failed to update route counts:", rpcError);
     return { error: "Failed to update counts" };
   }
 
-  return { upvotes, downvotes };
+  const row = data?.[0];
+  if (!row) {
+    return { error: "Route not found" };
+  }
+
+  return { upvotes: row.upvotes, downvotes: row.downvotes };
 }
 
 export async function getMyVote(
@@ -98,31 +89,36 @@ export async function getMyVote(
 export async function getMyVotes(
   routeIds: string[],
 ): Promise<Record<string, -1 | 0 | 1>> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user || routeIds.length === 0) return {};
+    if (!user || routeIds.length === 0) return {};
 
-  const { data, error } = await supabase
-    .from("route_votes")
-    .select("route_id, vote")
-    .in("route_id", routeIds)
-    .eq("user_id", user.id);
+    const { data, error } = await supabase
+      .from("route_votes")
+      .select("route_id, vote")
+      .in("route_id", routeIds)
+      .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Failed to fetch votes:", error);
+    if (error) {
+      console.error("Failed to fetch votes:", error);
+      return {};
+    }
+
+    const result: Record<string, -1 | 0 | 1> = {};
+    for (const routeId of routeIds) {
+      result[routeId] = 0;
+    }
+    for (const row of data ?? []) {
+      result[row.route_id] = row.vote as -1 | 0 | 1;
+    }
+
+    return result;
+  } catch (err) {
+    console.error("Failed to get my votes:", err);
     return {};
   }
-
-  const result: Record<string, -1 | 0 | 1> = {};
-  for (const routeId of routeIds) {
-    result[routeId] = 0;
-  }
-  for (const row of data ?? []) {
-    result[row.route_id] = row.vote as -1 | 0 | 1;
-  }
-
-  return result;
 }

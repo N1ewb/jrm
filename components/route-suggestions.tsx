@@ -53,10 +53,12 @@ function RouteCardCollapsed({
 
   return (
     <div className="divide-y divide-border/50">
-      <button
-        type="button"
+      <div
         onClick={onToggle}
-        className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+        role="button"
+        tabIndex={0}
+        className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3 cursor-pointer"
       >
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-primary">
           {rank}
@@ -129,7 +131,7 @@ function RouteCardCollapsed({
             <ChevronDown size={16} className="text-muted-foreground" />
           )}
         </div>
-      </button>
+      </div>
 
       {isExpanded && (
         <div className="px-4 py-4 space-y-3 bg-muted/30">

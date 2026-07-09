@@ -96,8 +96,8 @@ export default function UserDashboard() {
   useEffect(() => {
     if (nearbyRoutes.length === 0) return;
     import("@/actions/vote.actions").then(({ getMyVotes }) => {
-      getMyVotes(nearbyRoutes.map((r) => r.id)).then(setMyVotes);
-    });
+      getMyVotes(nearbyRoutes.map((r) => r.id)).then(setMyVotes).catch(() => {});
+    }).catch(() => {});
   }, [nearbyRoutes]);
 
   useEffect(() => {

@@ -29,7 +29,6 @@ import {
 import VoteButtons from "@/components/vote-buttons";
 import CommentThread from "@/components/comment-thread";
 import type { CommentRow } from "@/actions/discussion.actions";
-import { createClient } from "@/lib/supabase/client";
 
 const RouteDetailMap = dynamic(
   () => import("@/components/route-detail-map"),
@@ -43,7 +42,7 @@ const RouteDetailMap = dynamic(
   },
 );
 
-interface Route {
+export interface Route {
   id: string;
   user_id: string;
   author_email: string | null;
@@ -64,6 +63,7 @@ interface Route {
 
 interface Props {
   routes: Route[];
+  myVotes: Record<string, -1 | 0 | 1>;
 }
 
 const statusColors: Record<string, string> = {
@@ -82,10 +82,12 @@ function RouteCard({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
-      className="w-full text-left rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors overflow-hidden"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      role="button"
+      tabIndex={0}
+      className="w-full text-left rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors overflow-hidden cursor-pointer"
     >
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -147,40 +149,23 @@ function RouteCard({
           </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
-export function AllRoutesClient({ routes }: Props) {
+export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Route | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>({});
+  const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>(initialMyVotes);
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [myCommentVotes, setMyCommentVotes] = useState<Record<string, -1 | 0 | 1>>({});
 
   useEffect(() => {
-    async function fetchRole() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      setUserRole(data?.role ?? "user");
-    }
-    fetchRole();
+    const match = document.cookie.match(/(?:^|;\s*)user-role=([^;]*)/);
+    setUserRole(match ? decodeURIComponent(match[1]) : "user");
   }, []);
-
-  useEffect(() => {
-    if (routes.length === 0) return;
-    import("@/actions/vote.actions").then(({ getMyVotes }) => {
-      getMyVotes(routes.map((r) => r.id)).then(setMyVotes);
-    });
-  }, [routes]);
 
   const isAdmin = userRole === "admin" || userRole === "gov_official";
 

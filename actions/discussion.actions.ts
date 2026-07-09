@@ -174,33 +174,44 @@ export async function voteComment(
   if (!user) return { error: "You must be signed in to vote" };
 
   if (vote === 0) {
-    await supabase
+    const { error: delError } = await supabase
       .from("comment_votes")
       .delete()
       .eq("discussion_id", discussionId)
       .eq("user_id", user.id);
+
+    if (delError) {
+      console.error("Failed to remove comment vote:", delError);
+      return { error: "Failed to remove vote" };
+    }
   } else {
-    await supabase
+    const { error: upsertError } = await supabase
       .from("comment_votes")
       .upsert(
         { discussion_id: discussionId, user_id: user.id, vote },
         { onConflict: "discussion_id, user_id" },
       );
+
+    if (upsertError) {
+      console.error("Failed to save comment vote:", upsertError);
+      return { error: "Failed to save vote" };
+    }
   }
 
-  // Recalculate counts
-  const { data: counts } = await supabase
-    .from("comment_votes")
-    .select("vote")
-    .eq("discussion_id", discussionId);
+  // Recalculate counts via SECURITY DEFINER RPC (bypasses RLS)
+  const { data, error: rpcError } = await supabase.rpc("update_comment_vote_counts", {
+    p_discussion_id: discussionId,
+  });
 
-  const upvotes = counts?.filter((r) => r.vote === 1).length ?? 0;
-  const downvotes = counts?.filter((r) => r.vote === -1).length ?? 0;
+  if (rpcError) {
+    console.error("Failed to update comment vote counts:", rpcError);
+    return { error: "Failed to update counts" };
+  }
 
-  await supabase
-    .from("route_discussions")
-    .update({ upvotes, downvotes })
-    .eq("id", discussionId);
+  const row = data?.[0];
+  if (!row) {
+    return { error: "Comment not found" };
+  }
 
-  return { upvotes, downvotes };
+  return { upvotes: row.upvotes, downvotes: row.downvotes };
 }

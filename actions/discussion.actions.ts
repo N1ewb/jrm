@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 
 const RATE_LIMIT_SECONDS = 30;
-const MAX_REPLIES_PER_THREAD = 5;
 
 export interface CommentRow {
   id: string;
@@ -56,18 +55,6 @@ export async function postComment(
     if (elapsed < RATE_LIMIT_SECONDS) {
       const wait = Math.ceil(RATE_LIMIT_SECONDS - elapsed);
       return { error: `Please wait ${wait}s before posting again` };
-    }
-  }
-
-  // Max replies per thread
-  if (parentId) {
-    const { count: replyCount } = await supabase
-      .from("route_discussions")
-      .select("*", { count: "exact", head: true })
-      .eq("parent_id", parentId);
-
-    if ((replyCount ?? 0) >= MAX_REPLIES_PER_THREAD) {
-      return { error: "This thread has reached the maximum number of replies" };
     }
   }
 

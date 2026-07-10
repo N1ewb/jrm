@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -25,6 +25,8 @@ import {
   Trash2,
   Loader2,
   MessageSquare,
+  Search,
+  Filter,
 } from "lucide-react";
 import VoteButtons from "@/components/vote-buttons";
 import CommentThread from "@/components/comment-thread";
@@ -136,20 +138,15 @@ function RouteCard({
             <MessageSquare size={13} />
             {route.comment_count}
           </span>
+          <span className="flex items-center gap-1.5 ml-auto">
+            <span className="text-primary font-medium tabular-nums">
+              ▲{route.upvotes}
+            </span>
+            <span className="text-destructive font-medium tabular-nums">
+              ▼{route.downvotes}
+            </span>
+          </span>
         </div>
-      </div>
-
-      <div
-        className="border-t border-border px-4 py-2 flex items-center justify-between"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <VoteButtons
-          routeId={route.id}
-          initialUpvotes={route.upvotes}
-          initialDownvotes={route.downvotes}
-          initialMyVote={myVote}
-          size="md"
-        />
       </div>
     </div>
   );
@@ -164,12 +161,54 @@ export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [myCommentVotes, setMyCommentVotes] = useState<Record<string, -1 | 0 | 1>>({});
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | "Jeep" | "Bus">("all");
+  const [sortBy, setSortBy] = useState<"recent" | "votes" | "upvotes">("recent");
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     const match = document.cookie.match(/(?:^|;\s*)user-role=([^;]*)/);
-    setUserRole(match ? decodeURIComponent(match[1]) : "user");
+    const role = match ? decodeURIComponent(match[1]) : "user";
+    setUserRole(role);
+    if (role === "admin" || role === "gov_official") {
+      setSortBy("votes");
+    }
   }, []);
 
   const isAdmin = userRole === "admin" || userRole === "gov_official";
+
+  const filteredRoutes = useMemo(() => {
+    let result = routes;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.line.toLowerCase().includes(q) ||
+          r.start_point.toLowerCase().includes(q) ||
+          r.author_email?.toLowerCase().includes(q),
+      );
+    }
+
+    if (typeFilter !== "all") {
+      result = result.filter((r) => r.type === typeFilter);
+    }
+
+    switch (sortBy) {
+      case "votes":
+        result = [...result].sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
+        break;
+      case "upvotes":
+        result = [...result].sort((a, b) => b.upvotes - a.upvotes);
+        break;
+      default:
+        result = [...result].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+    }
+
+    return result;
+  }, [routes, searchQuery, typeFilter, sortBy]);
 
   const loadComments = useCallback(async (routeId: string) => {
     const { getComments } = await import("@/actions/discussion.actions");
@@ -430,15 +469,101 @@ export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {routes.map((route) => (
-        <RouteCard
-          key={route.id}
-          route={route}
-          myVote={myVotes[route.id] ?? 0}
-          onClick={() => setSelected(route)}
-        />
-      ))}
+    <div className="space-y-4">
+      {/* Search & filters */}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by line, route, or author..."
+            className="w-full h-10 pl-9 pr-4 rounded-xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 sm:hidden">
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Filter size={14} />
+            Filters
+          </button>
+          <div className="flex-1" />
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {filteredRoutes.length} of {routes.length}
+          </span>
+        </div>
+
+        <div className={`${showFilters ? "flex" : "hidden"} sm:flex flex-wrap items-center gap-2`}>
+          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+            {(["all", "Jeep", "Bus"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTypeFilter(t)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  typeFilter === t
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t === "all" ? "All" : t}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+            {[
+              { key: "recent" as const, label: "Recent" },
+              { key: "votes" as const, label: "Top" },
+              { key: "upvotes" as const, label: "Most ▲" },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setSortBy(opt.key)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  sortBy === opt.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="hidden sm:inline text-xs text-muted-foreground tabular-nums ml-auto">
+            {filteredRoutes.length} of {routes.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Route grid */}
+      {filteredRoutes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-sm text-muted-foreground">
+            {searchQuery || typeFilter !== "all"
+              ? "No routes match your search or filters."
+              : "No routes yet."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredRoutes.map((route) => (
+            <RouteCard
+              key={route.id}
+              route={route}
+              myVote={myVotes[route.id] ?? 0}
+              onClick={() => setSelected(route)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

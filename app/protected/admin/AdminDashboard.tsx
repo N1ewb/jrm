@@ -1,16 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Eye, TrendingUp, Route, UserPlus, Calendar } from "lucide-react";
+import { Users, Route, UserPlus, MessageSquare, Vote } from "lucide-react";
+import type { AdminStats } from "@/actions/admin.actions";
 
 function StatCard({
   title,
   value,
-  change,
+  subtitle,
   icon: Icon,
   color,
 }: {
   title: string;
   value: string;
-  change: string;
+  subtitle?: string;
   icon: React.ElementType;
   color: string;
 }) {
@@ -26,13 +27,15 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-foreground">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{change}</p>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ stats }: { stats: AdminStats }) {
   return (
     <div className="space-y-6">
       <div>
@@ -47,31 +50,29 @@ export default function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Routes"
-          value="24"
-          change="+3 this week"
+          value={String(stats.totalRoutes)}
+          subtitle={`${stats.routesAccepted} accepted, ${stats.routesRejected} rejected`}
           icon={Route}
           color="bg-primary"
         />
         <StatCard
-          title="Active Users"
-          value="156"
-          change="+12 this week"
+          title="Community Members"
+          value={String(stats.communityMembers)}
           icon={Users}
           color="bg-secondary"
         />
         <StatCard
           title="Pending Reviews"
-          value="8"
-          change="4 need attention"
+          value={String(stats.pendingReviews)}
+          subtitle="Awaiting admin decision"
           icon={UserPlus}
           color="bg-yellow-600"
         />
         <StatCard
-          title="User Participation"
-          value="73%"
-          change="+5% this month"
-          icon={TrendingUp}
-          color="bg-green-600"
+          title="Total Comments"
+          value={String(stats.totalComments)}
+          icon={MessageSquare}
+          color="bg-blue-600"
         />
       </div>
 
@@ -79,73 +80,43 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Calendar size={16} className="text-primary" />
-              Site Visits
+              <Route size={16} className="text-primary" />
+              Route Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  <span className="text-sm text-foreground">Daily</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-semibold text-foreground">
-                    142
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    visits today
-                  </span>
-                </div>
+                <span className="text-sm text-foreground">
+                  Total Submitted
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {stats.totalRoutes}
+                </span>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-blue-500"
-                  style={{ width: "45%" }}
-                />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground">
+                  Accepted
+                </span>
+                <span className="text-sm font-semibold text-green-600">
+                  {stats.routesAccepted}
+                </span>
               </div>
-
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-sm text-foreground">Weekly</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-semibold text-foreground">
-                    847
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    this week
-                  </span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground">
+                  Pending
+                </span>
+                <span className="text-sm font-semibold text-yellow-600">
+                  {stats.routesPending}
+                </span>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-indigo-500"
-                  style={{ width: "68%" }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  <span className="text-sm text-foreground">Monthly</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-semibold text-foreground">
-                    3,421
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    this month
-                  </span>
-                </div>
-              </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-purple-500"
-                  style={{ width: "82%" }}
-                />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-foreground">
+                  Rejected
+                </span>
+                <span className="text-sm font-semibold text-destructive">
+                  {stats.routesRejected}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -154,55 +125,39 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Users size={16} className="text-primary" />
-              User Participation
+              <Vote size={16} className="text-primary" />
+              Community Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-foreground">
-                  Routes Submitted
+                  Community Members
                 </span>
-                <span className="text-sm font-semibold text-foreground">24</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {stats.communityMembers}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-foreground">
-                  Routes Accepted
+                  Total Comments
                 </span>
-                <span className="text-sm font-semibold text-foreground">16</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {stats.totalComments}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-foreground">
-                  Routes Pending
+                  Total Votes
                 </span>
-                <span className="text-sm font-semibold text-foreground">8</span>
-              </div>
-              <hr className="border-border" />
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-foreground">Community Members</span>
-                <span className="text-sm font-semibold text-foreground">89</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-foreground">
-                  Active Contributors
+                <span className="text-sm font-semibold text-foreground">
+                  {stats.totalVotes}
                 </span>
-                <span className="text-sm font-semibold text-foreground">34</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-foreground">
-                  Reviews Made
-                </span>
-                <span className="text-sm font-semibold text-foreground">127</span>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="text-center text-xs text-muted-foreground">
-        Analytics data is placeholder and will be replaced with real metrics
-        once tracking is implemented.
       </div>
     </div>
   );

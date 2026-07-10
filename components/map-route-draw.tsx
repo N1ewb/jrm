@@ -13,9 +13,10 @@ const CLOSE_THRESHOLD_KM = 0.05;
 interface RouteDrawProps {
   onRouteComplete: (coords: [number, number][], distance: number) => void;
   onReset: () => void;
+  searchLocation?: [number, number];
 }
 
-export default function MapRouteDraw({ onRouteComplete, onReset }: RouteDrawProps) {
+export default function MapRouteDraw({ onRouteComplete, onReset, searchLocation }: RouteDrawProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<maplibregl.Map | null>(null);
   const points = useRef<[number, number][]>([]);
@@ -125,6 +126,13 @@ export default function MapRouteDraw({ onRouteComplete, onReset }: RouteDrawProp
       onRouteCompleteRef.current(closed, distance);
     }
   }, [displaySnappedRoute, redrawDrawLine]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (map && searchLocation) {
+      map.flyTo({ center: searchLocation, zoom: 16, duration: 1500 });
+    }
+  }, [searchLocation]);
 
   const handleMapClick = useCallback((e: maplibregl.MapMouseEvent) => {
     if (statusRef.current !== "drawing") return;

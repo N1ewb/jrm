@@ -89,7 +89,7 @@ function RouteCard({
       tabIndex={0}
       className="w-full text-left rounded-xl border border-border bg-card hover:bg-accent/50 transition-colors overflow-hidden cursor-pointer"
     >
-      <div className="p-4">
+      <div className="p-4 pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-semibold text-foreground truncate">
@@ -99,24 +99,13 @@ function RouteCard({
               {route.start_point}
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <div onClick={(e) => e.stopPropagation()}>
-              <VoteButtons
-                routeId={route.id}
-                initialUpvotes={route.upvotes}
-                initialDownvotes={route.downvotes}
-                initialMyVote={myVote}
-                size="sm"
-              />
-            </div>
-            <Badge
-              className={
-                statusColors[route.status] ?? "bg-gray-100 text-gray-800"
-              }
-            >
-              {route.status}
-            </Badge>
-          </div>
+          <Badge
+            className={
+              statusColors[route.status] ?? "bg-gray-100 text-gray-800"
+            }
+          >
+            {route.status}
+          </Badge>
         </div>
 
         <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
@@ -148,6 +137,19 @@ function RouteCard({
             {route.comment_count}
           </span>
         </div>
+      </div>
+
+      <div
+        className="border-t border-border px-4 py-2 flex items-center justify-between"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <VoteButtons
+          routeId={route.id}
+          initialUpvotes={route.upvotes}
+          initialDownvotes={route.downvotes}
+          initialMyVote={myVote}
+          size="md"
+        />
       </div>
     </div>
   );
@@ -282,7 +284,26 @@ export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
           <div className="w-full lg:w-80 shrink-0 space-y-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">{selected.line}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base">{selected.line}</CardTitle>
+                  <Badge
+                    className={
+                      statusColors[selected.status] ??
+                      "bg-gray-100 text-gray-800"
+                    }
+                  >
+                    {selected.status}
+                  </Badge>
+                </div>
+                <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                  <VoteButtons
+                    routeId={selected.id}
+                    initialUpvotes={selected.upvotes}
+                    initialDownvotes={selected.downvotes}
+                    initialMyVote={myVotes[selected.id] ?? 0}
+                    size="md"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -294,27 +315,6 @@ export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
                   <span className="font-medium text-right">
                     {selected.start_point}
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge
-                    className={
-                      statusColors[selected.status] ??
-                      "bg-gray-100 text-gray-800"
-                    }
-                  >
-                    {selected.status}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Votes</span>
-                  <VoteButtons
-                    routeId={selected.id}
-                    initialUpvotes={selected.upvotes}
-                    initialDownvotes={selected.downvotes}
-                    initialMyVote={myVotes[selected.id] ?? 0}
-                    size="sm"
-                  />
                 </div>
                 <hr className="border-border" />
                 <div className="flex justify-between">

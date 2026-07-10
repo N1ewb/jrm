@@ -16,7 +16,6 @@ export async function voteRoute(
     return { error: "You must be signed in to vote" };
   }
 
-  // Remove vote
   if (vote === 0) {
     const { error: delError } = await supabase
       .from("route_votes")
@@ -29,7 +28,6 @@ export async function voteRoute(
       return { error: "Failed to remove vote" };
     }
   } else {
-    // Upsert vote
     const { error: upsertError } = await supabase
       .from("route_votes")
       .upsert(
@@ -43,7 +41,6 @@ export async function voteRoute(
     }
   }
 
-  // Recalculate denormalized counts via SECURITY DEFINER RPC (bypasses RLS)
   const { data, error: rpcError } = await supabase.rpc("update_route_vote_counts", {
     p_route_id: routeId,
   });
@@ -59,31 +56,6 @@ export async function voteRoute(
   }
 
   return { upvotes: row.upvotes, downvotes: row.downvotes };
-}
-
-export async function getMyVote(
-  routeId: string,
-): Promise<-1 | 0 | 1 | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return 0;
-
-  const { data, error } = await supabase
-    .from("route_votes")
-    .select("vote")
-    .eq("route_id", routeId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Failed to fetch vote:", error);
-    return { error: "Failed to fetch vote" };
-  }
-
-  return (data?.vote as -1 | 0 | 1) ?? 0;
 }
 
 export async function getMyVotes(

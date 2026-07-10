@@ -198,7 +198,6 @@ export async function voteComment(
     }
   }
 
-  // Recalculate counts via SECURITY DEFINER RPC (bypasses RLS)
   const { data, error: rpcError } = await supabase.rpc("update_comment_vote_counts", {
     p_discussion_id: discussionId,
   });

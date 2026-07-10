@@ -9,7 +9,6 @@ interface VoteButtonsProps {
   initialDownvotes: number;
   initialMyVote: -1 | 0 | 1;
   onVote?: (upvotes: number, downvotes: number) => void;
-  /** Override the voting action (e.g., for comment voting) */
   voteAction?: (id: string, vote: -1 | 0 | 1) => Promise<
     { upvotes: number; downvotes: number } | { error: string }
   >;
@@ -30,8 +29,6 @@ export default function VoteButtons({
   const [downvotes, setDownvotes] = useState(initialDownvotes);
   const [loading, setLoading] = useState(false);
 
-  const netScore = upvotes - downvotes;
-
   const handleVote = useCallback(
     async (vote: -1 | 1) => {
       if (loading) return;
@@ -41,7 +38,7 @@ export default function VoteButtons({
       const prevUpvotes = upvotes;
       const prevDownvotes = downvotes;
 
-      // Optimistic update
+      // Optimistic update — user can only have one active vote at a time
       setMyVote(newVote);
       if (newVote === 0) {
         if (prevMyVote === 1) setUpvotes((u) => Math.max(0, u - 1));
@@ -83,54 +80,52 @@ export default function VoteButtons({
     [routeId, myVote, upvotes, downvotes, loading, onVote, voteAction],
   );
 
-  const iconSize = size === "md" ? 18 : 14;
+  const compact = size === "sm";
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-2">
       <button
         type="button"
         onClick={() => handleVote(1)}
         disabled={loading}
-        className={`p-1 rounded transition-colors ${
+        className={`inline-flex items-center gap-1.5 rounded-md transition-colors disabled:opacity-50 ${
+          compact
+            ? "px-2 py-1 text-xs"
+            : "px-3 py-2 text-sm min-h-[44px]"
+        } ${
           myVote === 1
             ? "text-primary bg-primary/10"
             : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-        } disabled:opacity-50`}
+        }`}
         aria-label={myVote === 1 ? "Remove upvote" : "Upvote"}
       >
         <ThumbsUp
-          size={iconSize}
+          size={compact ? 14 : 18}
           className={myVote === 1 ? "fill-primary" : ""}
         />
+        <span className="tabular-nums font-medium">{upvotes}</span>
       </button>
-
-      <span
-        className={`text-xs font-semibold tabular-nums min-w-[1.5ch] text-center ${
-          netScore > 0
-            ? "text-primary"
-            : netScore < 0
-              ? "text-destructive"
-              : "text-muted-foreground"
-        }`}
-      >
-        {netScore}
-      </span>
 
       <button
         type="button"
         onClick={() => handleVote(-1)}
         disabled={loading}
-        className={`p-1 rounded transition-colors ${
+        className={`inline-flex items-center gap-1.5 rounded-md transition-colors disabled:opacity-50 ${
+          compact
+            ? "px-2 py-1 text-xs"
+            : "px-3 py-2 text-sm min-h-[44px]"
+        } ${
           myVote === -1
             ? "text-destructive bg-destructive/10"
             : "text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-        } disabled:opacity-50`}
+        }`}
         aria-label={myVote === -1 ? "Remove downvote" : "Downvote"}
       >
         <ThumbsDown
-          size={iconSize}
+          size={compact ? 14 : 18}
           className={myVote === -1 ? "fill-destructive" : ""}
         />
+        <span className="tabular-nums font-medium">{downvotes}</span>
       </button>
     </div>
   );

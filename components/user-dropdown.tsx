@@ -2,14 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { User, Settings, LogOut, Heart, Award, Info } from "lucide-react";
 
 export default function UserDropdown() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -36,10 +34,8 @@ export default function UserDropdown() {
   }, []);
 
   const handleLogout = async () => {
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
+    const { signOutAction } = await import("@/actions/user.actions");
+    await signOutAction();
   };
 
   const displayName = email ? email.split("@")[0] : "User";

@@ -76,10 +76,11 @@ export async function postComment(
     .insert({
       route_id: routeId,
       user_id: user.id,
+      author_email: user.email ?? "Unknown",
       body: trimmed,
       parent_id: parentId ?? null,
     })
-    .select("id, route_id, user_id, body, parent_id, created_at, updated_at, is_hidden, upvotes, downvotes")
+    .select("id, route_id, user_id, body, parent_id, created_at, updated_at, is_hidden, upvotes, downvotes, author_email")
     .single();
 
   if (error) {
@@ -93,7 +94,7 @@ export async function postComment(
   return {
     comment: {
       ...data,
-      author_email: user.email ?? "Unknown",
+      author_email: data.author_email ?? "Unknown",
     },
   };
 }
@@ -111,7 +112,7 @@ export async function getComments(routeId: string): Promise<{
     .from("route_discussions")
     .select(`
       id, route_id, user_id, body, parent_id, created_at, updated_at, is_hidden, upvotes, downvotes,
-      author:user_id (email)
+      author_email
     `)
     .eq("route_id", routeId)
     .eq("is_hidden", false)
@@ -123,7 +124,6 @@ export async function getComments(routeId: string): Promise<{
   }
 
   const mapped: CommentRow[] = (comments ?? []).map((c: Record<string, unknown>) => {
-    const author = c.author as { email?: string } | null;
     return {
       id: c.id as string,
       route_id: c.route_id as string,
@@ -135,7 +135,7 @@ export async function getComments(routeId: string): Promise<{
       is_hidden: c.is_hidden as boolean,
       upvotes: c.upvotes as number,
       downvotes: c.downvotes as number,
-      author_email: author?.email ?? "Unknown",
+      author_email: (c.author_email as string) ?? "Unknown",
     };
   });
 

@@ -109,13 +109,22 @@ async function requireAdmin() {
   return { supabase, error: null };
 }
 
-export async function acceptRoute(routeId: string) {
+export async function acceptRoute(routeId: string, notifyMsg?: string) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };
 
+  const { data: route } = await supabase
+    .from("routes")
+    .select("id, user_id, upvotes, downvotes, status")
+    .eq("id", routeId)
+    .single();
+
+  if (!route) return { error: "Route not found" };
+  if (route.status !== "pending") return { error: "Route is not in pending status" };
+
   const { data, error: updateError } = await supabase
     .from("routes")
-    .update({ status: "active" })
+    .update({ status: "active", rejection_reason: null })
     .eq("id", routeId)
     .select("id");
 
@@ -129,16 +138,37 @@ export async function acceptRoute(routeId: string) {
     return { error: "Database permission denied. Run the SQL migration to fix RLS policies (see scripts/migrations/001-add-rls-policies.sql)." };
   }
 
+  if (route.user_id) {
+    const netVotes = (route.upvotes ?? 0) - (route.downvotes ?? 0);
+    const message = notifyMsg ||
+      `Your route has been approved!${netVotes > 0 ? ` (+${netVotes} upvotes from the community)` : ""}`;
+
+    await supabase.from("notifications").insert({
+      user_id: route.user_id,
+      type: "route_approved",
+      message,
+    });
+  }
+
   return { success: true };
 }
 
-export async function rejectRoute(routeId: string) {
+export async function rejectRoute(routeId: string, reason?: string) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };
 
+  const { data: route } = await supabase
+    .from("routes")
+    .select("id, user_id, status")
+    .eq("id", routeId)
+    .single();
+
+  if (!route) return { error: "Route not found" };
+  if (route.status !== "pending") return { error: "Route is not in pending status" };
+
   const { data, error: updateError } = await supabase
     .from("routes")
-    .update({ status: "rejected" })
+    .update({ status: "rejected", rejection_reason: reason ?? null })
     .eq("id", routeId)
     .select("id");
 
@@ -150,6 +180,18 @@ export async function rejectRoute(routeId: string) {
   if (!data || data.length === 0) {
     console.error("rejectRoute: RLS blocked update — no rows affected");
     return { error: "Database permission denied. Run the SQL migration to fix RLS policies (see scripts/migrations/001-add-rls-policies.sql)." };
+  }
+
+  if (route.user_id) {
+    const message = reason
+      ? `Your route was rejected: ${reason}`
+      : "Your route was rejected by an admin.";
+
+    await supabase.from("notifications").insert({
+      user_id: route.user_id,
+      type: "route_rejected",
+      message,
+    });
   }
 
   return { success: true };

@@ -49,8 +49,8 @@ const adminLinks = (
     <SectionLabel label="Routes" />
     <SidebarLink href="/protected/add-route">Add Route</SidebarLink>
     <SidebarLink href="/protected/all-routes">All Routes</SidebarLink>
-    <SidebarLink href="/protected/review-routes">
-      Review Community Routes
+    <SidebarLink href="/protected/admin/review-queue">
+      Review Queue
     </SidebarLink>
     <SectionLabel label="Account" />
     <SidebarLink href="/protected">Settings &amp; Notifications</SidebarLink>

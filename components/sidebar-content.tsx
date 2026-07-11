@@ -39,6 +39,12 @@ const userLinks = (
     <SidebarLink href="/protected/community-routes">
       Community Routes
     </SidebarLink>
+    <SidebarLink href="/protected/landmarks">
+      Landmarks
+    </SidebarLink>
+    <SidebarLink href="/protected/add-landmark">
+      Add Landmark
+    </SidebarLink>
     <SectionLabel label="Account" />
     <SidebarLink href="/protected">Settings &amp; Notifications</SidebarLink>
   </>

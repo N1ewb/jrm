@@ -186,6 +186,13 @@ export default function AdminMobileNav() {
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
           </Link>
+          <Link
+            href="/protected/all-routes"
+            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
+          >
+            <Route size={20} />
+            <span>Routes</span>
+          </Link>
           <button
             onClick={() => setOpen(true)}
             className="flex flex-col items-center gap-0.5 text-[10px] font-medium"

@@ -1,4 +1,5 @@
 import { Header } from "@/components/header";
+import AppShell from "@/components/app-shell";
 
 export default function ProtectedLayout({
   children,
@@ -8,9 +9,7 @@ export default function ProtectedLayout({
   return (
     <div className="flex flex-col min-h-dvh">
       <Header />
-      <div className="flex flex-1 min-h-0">
-        {children}
-      </div>
+      <AppShell>{children}</AppShell>
     </div>
   );
 }

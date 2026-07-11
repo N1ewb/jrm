@@ -17,7 +17,7 @@ export default function AllRoutesPage() {
         if (result.error) {
           setError(result.error);
         } else {
-          setRoutes(result.routes ?? []);
+          setRoutes((result.routes ?? []).filter((r) => r.status === "active"));
         }
       } catch {
         setError("Failed to load routes");
@@ -33,7 +33,7 @@ export default function AllRoutesPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">All Routes</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Browse all submitted routes
+          Browse official community routes
         </p>
       </div>
 

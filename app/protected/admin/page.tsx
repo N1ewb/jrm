@@ -1,13 +1,10 @@
-import { Suspense } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import AdminDashboard from "./AdminDashboard";
-import { getAdminStats } from "@/actions/admin.actions";
+import type { AdminStats } from "@/actions/admin.actions";
 
-async function AdminDashboardWrapper() {
-  const stats = await getAdminStats();
-  return <AdminDashboard stats={stats} />;
-}
-
-function AdminDashboardFallback() {
+function DashboardFallback() {
   return (
     <div className="space-y-6">
       <div>
@@ -28,9 +25,30 @@ function AdminDashboardFallback() {
 }
 
 export default function AdminPage() {
-  return (
-    <Suspense fallback={<AdminDashboardFallback />}>
-      <AdminDashboardWrapper />
-    </Suspense>
-  );
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const { getAdminStats } = await import("@/actions/admin.actions");
+        const result = await getAdminStats();
+        setStats(result);
+      } catch {
+        setError("Failed to load stats");
+      }
+    }
+    fetchStats();
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-destructive font-medium">{error}</p>
+      </div>
+    );
+  }
+
+  if (!stats) return <DashboardFallback />;
+  return <AdminDashboard stats={stats} />;
 }

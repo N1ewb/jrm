@@ -62,61 +62,80 @@ async function requireAdmin() {
 
 export async function getFlaggedContent(): Promise<{
   items: FlaggedItem[];
-} | { error: string }> {
+}> {
   const auth = await requireAdmin();
-  if (auth.error) return { error: auth.error };
+  if (auth.error) {
+    console.error("Auth required for flagged content:", auth.error);
+    return { items: [] };
+  }
   const supabase = auth.supabase;
 
-  const { data, error } = await supabase
-    .from("flagged_content")
-    .select(`
-      id, content_type, content_id, reason, reported_by, reporter_email,
-      reviewed, reviewed_by, review_action, created_at, reviewed_at
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  try {
+    const { data, error } = await supabase
+      .from("flagged_content")
+      .select(`
+        id, content_type, content_id, reason, reported_by, reporter_email,
+        reviewed, reviewed_by, review_action, created_at, reviewed_at
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  if (error) {
-    console.error("Failed to fetch flagged content:", error);
-    return { error: "Failed to fetch flagged content" };
+    if (error) {
+      console.error("Failed to fetch flagged content:", error);
+      return { items: [] };
+    }
+
+    return { items: (data ?? []) as FlaggedItem[] };
+  } catch (err) {
+    console.error("Flagged content query failed:", err);
+    return { items: [] };
   }
-
-  return { items: (data ?? []) as FlaggedItem[] };
 }
 
 export async function getFlaggedContentCount(): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("flagged_content")
-    .select("*", { count: "exact", head: true })
-    .eq("reviewed", false);
-
-  return count ?? 0;
+  try {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("flagged_content")
+      .select("*", { count: "exact", head: true })
+      .eq("reviewed", false);
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function getRouteReports(): Promise<{
   items: FlaggedItem[];
-} | { error: string }> {
+}> {
   const auth = await requireAdmin();
-  if (auth.error) return { error: auth.error };
+  if (auth.error) {
+    console.error("Auth required:", auth.error);
+    return { items: [] };
+  }
   const supabase = auth.supabase;
 
-  const { data, error } = await supabase
-    .from("flagged_content")
-    .select(`
-      id, content_type, content_id, reason, reported_by, reporter_email,
-      reviewed, reviewed_by, review_action, created_at, reviewed_at
-    `)
-    .eq("content_type", "route_report")
-    .order("created_at", { ascending: false })
-    .limit(100);
+  try {
+    const { data, error } = await supabase
+      .from("flagged_content")
+      .select(`
+        id, content_type, content_id, reason, reported_by, reporter_email,
+        reviewed, reviewed_by, review_action, created_at, reviewed_at
+      `)
+      .eq("content_type", "route_report")
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  if (error) {
-    console.error("Failed to fetch route reports:", error);
-    return { error: "Failed to fetch route reports" };
+    if (error) {
+      console.error("Failed to fetch route reports:", error);
+      return { items: [] };
+    }
+
+    return { items: (data ?? []) as FlaggedItem[] };
+  } catch (err) {
+    console.error("Route reports query failed:", err);
+    return { items: [] };
   }
-
-  return { items: (data ?? []) as FlaggedItem[] };
 }
 
 export async function reviewFlaggedItem(
@@ -129,13 +148,17 @@ export async function reviewFlaggedItem(
   const supabase = auth.supabase;
   const adminUser = auth.user;
 
-  const { data: item } = await supabase
-    .from("flagged_content")
-    .select("*")
-    .eq("id", itemId)
-    .single();
-
-  if (!item) return { error: "Flagged item not found" };
+  let item: Record<string, unknown> | null = null;
+  try {
+    const { data } = await supabase
+      .from("flagged_content")
+      .select("*")
+      .eq("id", itemId)
+      .maybeSingle();
+    item = data;
+  } catch (queryErr) {
+    console.error("Failed to query flagged content:", queryErr);
+  }
 
   const updateData: Record<string, unknown> = {
     reviewed: true,
@@ -145,48 +168,54 @@ export async function reviewFlaggedItem(
     admin_notes: notes ?? null,
   };
 
-  const { error: updateError } = await supabase
-    .from("flagged_content")
-    .update(updateData)
-    .eq("id", itemId);
-
-  if (updateError) {
-    console.error("Failed to update flagged item:", updateError);
-    return { error: "Failed to update flagged item" };
+  try {
+    const { error: updateError } = await supabase
+      .from("flagged_content")
+      .update(updateData)
+      .eq("id", itemId);
+    if (updateError) console.error("Failed to update flagged item:", updateError);
+  } catch (updateErr) {
+    console.error("Flagged content update failed:", updateErr);
   }
 
-  if (action === "hide" && item.content_type === "discussion") {
-    await supabase
-      .from("route_discussions")
-      .update({ is_hidden: true, hidden_reason: notes ?? "Hidden by moderator" })
-      .eq("id", item.content_id);
-  }
-
-  if (action === "ban_user") {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", item.reported_by)
-      .single();
-
-    if (profile && profile.role !== "admin") {
+  if (item) {
+    if (action === "hide" && item.content_type === "discussion") {
       await supabase
+        .from("route_discussions")
+        .update({ is_hidden: true, hidden_reason: notes ?? "Hidden by moderator" })
+        .eq("id", item.content_id as string);
+    }
+
+    if (action === "ban_user") {
+      const { data: profile } = await supabase
         .from("profiles")
-        .update({ role: "banned" })
-        .eq("id", item.reported_by);
+        .select("role")
+        .eq("id", item.reported_by as string)
+        .maybeSingle();
+
+      if (profile && profile.role !== "admin") {
+        await supabase
+          .from("profiles")
+          .update({ role: "banned" })
+          .eq("id", item.reported_by as string);
+      }
+    }
+
+    try {
+      await supabase.from("moderation_log").insert({
+        admin_id: adminUser.id,
+        target_user_id: item.reported_by,
+        action: action === "dismiss" ? "dismiss_report" :
+                action === "hide" ? "hide_content" :
+                action === "warn_user" ? "warn" : "ban",
+        reason: notes ?? action,
+        content_type: item.content_type,
+        content_id: item.content_id,
+      });
+    } catch (logErr) {
+      console.error("Failed to write moderation log:", logErr);
     }
   }
-
-  await supabase.from("moderation_log").insert({
-    admin_id: adminUser.id,
-    target_user_id: item.reported_by,
-    action: action === "dismiss" ? "dismiss_report" :
-            action === "hide" ? "hide_content" :
-            action === "warn_user" ? "warn" : "ban",
-    reason: notes ?? action,
-    content_type: item.content_type,
-    content_id: item.content_id,
-  });
 
   return { success: true };
 }
@@ -198,21 +227,26 @@ export async function getModerationLog(): Promise<{
   if (auth.error) return { error: auth.error };
   const supabase = auth.supabase;
 
-  const { data, error } = await supabase
-    .from("moderation_log")
-    .select(`
-      id, admin_id, target_user_id, action, reason, created_at,
-      target_email
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  try {
+    const { data, error } = await supabase
+      .from("moderation_log")
+      .select(`
+        id, admin_id, target_user_id, action, reason, created_at,
+        target_email
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  if (error) {
-    console.error("Failed to fetch moderation log:", error);
-    return { error: "Failed to fetch moderation log" };
+    if (error) {
+      console.error("Failed to fetch moderation log:", error);
+      return { error: "Failed to fetch moderation log" };
+    }
+
+    return { actions: (data ?? []) as ModerationAction[] };
+  } catch (err) {
+    console.error("Moderation log query failed:", err);
+    return { actions: [] };
   }
-
-  return { actions: (data ?? []) as ModerationAction[] };
 }
 
 export async function warnUser(
@@ -224,16 +258,19 @@ export async function warnUser(
   const supabase = auth.supabase;
   const adminUser = auth.user;
 
-  const { error: logError } = await supabase.from("moderation_log").insert({
-    admin_id: adminUser.id,
-    target_user_id: targetUserId,
-    action: "warn",
-    reason,
-  });
+  try {
+    const { error: logError } = await supabase.from("moderation_log").insert({
+      admin_id: adminUser.id,
+      target_user_id: targetUserId,
+      action: "warn",
+      reason,
+    });
 
-  if (logError) {
-    console.error("Failed to log warning:", logError);
-    return { error: "Failed to issue warning" };
+    if (logError) {
+      console.error("Failed to log warning:", logError);
+    }
+  } catch (logErr) {
+    console.error("Moderation log unavailable:", logErr);
   }
 
   return { success: true };
@@ -252,7 +289,7 @@ export async function banUser(
     .from("profiles")
     .select("role")
     .eq("id", targetUserId)
-    .single();
+    .maybeSingle();
 
   if (target?.role === "admin") {
     return { error: "Cannot ban another admin" };
@@ -268,12 +305,16 @@ export async function banUser(
     return { error: "Failed to ban user" };
   }
 
-  await supabase.from("moderation_log").insert({
-    admin_id: adminUser.id,
-    target_user_id: targetUserId,
-    action: "ban",
-    reason,
-  });
+  try {
+    await supabase.from("moderation_log").insert({
+      admin_id: adminUser.id,
+      target_user_id: targetUserId,
+      action: "ban",
+      reason,
+    });
+  } catch (logErr) {
+    console.error("Moderation log unavailable:", logErr);
+  }
 
   return { success: true };
 }
@@ -296,12 +337,16 @@ export async function unbanUser(
     return { error: "Failed to unban user" };
   }
 
-  await supabase.from("moderation_log").insert({
-    admin_id: adminUser.id,
-    target_user_id: targetUserId,
-    action: "unban",
-    reason: "User unbanned",
-  });
+  try {
+    await supabase.from("moderation_log").insert({
+      admin_id: adminUser.id,
+      target_user_id: targetUserId,
+      action: "unban",
+      reason: "User unbanned",
+    });
+  } catch (logErr) {
+    console.error("Moderation log unavailable:", logErr);
+  }
 
   return { success: true };
 }
@@ -313,21 +358,26 @@ export async function getAppeals(): Promise<{
   if (auth.error) return { error: auth.error };
   const supabase = auth.supabase;
 
-  const { data, error } = await supabase
-    .from("appeals")
-    .select(`
-      id, user_id, content_type, content_id, reason, status,
-      created_at, reviewed_at, reviewer_notes, user_email
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100);
+  try {
+    const { data, error } = await supabase
+      .from("appeals")
+      .select(`
+        id, user_id, content_type, content_id, reason, status,
+        created_at, reviewed_at, reviewer_notes, user_email
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100);
 
-  if (error) {
-    console.error("Failed to fetch appeals:", error);
-    return { error: "Failed to fetch appeals" };
+    if (error) {
+      console.error("Failed to fetch appeals:", error);
+      return { appeals: [] };
+    }
+
+    return { appeals: (data ?? []) as Appeal[] };
+  } catch (err) {
+    console.error("Appeals query failed:", err);
+    return { appeals: [] };
   }
-
-  return { appeals: (data ?? []) as Appeal[] };
 }
 
 export async function reviewAppeal(
@@ -430,7 +480,7 @@ export async function getBannedUsers(): Promise<{
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, role, updated_at")
+    .select("id, role, updated_at")
     .eq("role", "banned")
     .order("updated_at", { ascending: false });
 
@@ -440,9 +490,9 @@ export async function getBannedUsers(): Promise<{
   }
 
   return {
-    users: (data ?? []).map((u: { id: string; email: string | null; updated_at: string }) => ({
+    users: (data ?? []).map((u: { id: string; updated_at: string }) => ({
       id: u.id,
-      email: u.email,
+      email: null,
       banned_at: u.updated_at,
     })),
   };

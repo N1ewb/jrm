@@ -104,3 +104,15 @@ export const AVG_SPEED = {
   jeep: 20,
   bus: 25,
 } as const;
+
+export const LANDMARK_CATEGORIES = [
+  "terminal",
+  "church",
+  "school",
+  "market",
+  "hospital",
+  "mall",
+  "park",
+  "landmark",
+  "other",
+] as const;

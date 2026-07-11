@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LANDMARK_CATEGORIES } from "@/actions/landmark.actions";
+import { LANDMARK_CATEGORIES } from "@/lib/constants";
 import type { LandmarkRow } from "@/actions/landmark.actions";
 
 export default function LandmarksListPage() {

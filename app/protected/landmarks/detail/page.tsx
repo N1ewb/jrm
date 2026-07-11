@@ -18,7 +18,7 @@ import VoteButtons from "@/components/vote-buttons";
 import CommentThread from "@/components/comment-thread";
 import type { CommentRow } from "@/actions/discussion.actions";
 import type { LandmarkRow, LandmarkRouteRow } from "@/actions/landmark.actions";
-import { LANDMARK_CATEGORIES } from "@/actions/landmark.actions";
+import { LANDMARK_CATEGORIES } from "@/lib/constants";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 

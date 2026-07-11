@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ImageUpload from "@/components/image-upload";
-import { LANDMARK_CATEGORIES } from "@/actions/landmark.actions";
+import { LANDMARK_CATEGORIES } from "@/lib/constants";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";

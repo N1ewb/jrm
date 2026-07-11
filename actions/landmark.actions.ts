@@ -40,17 +40,7 @@ export interface LandmarkRouteRow {
   created_at: string;
 }
 
-export const LANDMARK_CATEGORIES = [
-  "terminal",
-  "church",
-  "school",
-  "market",
-  "hospital",
-  "mall",
-  "park",
-  "landmark",
-  "other",
-] as const;
+import { LANDMARK_CATEGORIES } from "@/lib/constants";
 
 export async function addLandmark(input: {
   name: string;
@@ -453,7 +443,7 @@ export async function toggleLandmarkImagesHidden(
 
 export async function getLandmarkComments(
   landmarkId: string,
-): Promise<{ id: string } | { error: string }> {
+): Promise<{ comments: any[] } | { error: string }> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("route_discussions")
@@ -467,5 +457,5 @@ export async function getLandmarkComments(
     return { error: "Failed to fetch comments" };
   }
 
-  return data as any;
+  return { comments: data ?? [] };
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DrawerLink } from "@/components/drawer-link";
-import { LayoutDashboard, Menu, X, Flag, ShieldAlert, MessageCircle, Route, PlusCircle, Settings, Heart } from "lucide-react";
+import { LayoutDashboard, Menu, X, Flag, ShieldAlert, MessageCircle, Route, PlusCircle, Users, Settings, Heart } from "lucide-react";
 
 export default function AdminMobileNav() {
   const pathname = usePathname();
@@ -187,11 +187,18 @@ export default function AdminMobileNav() {
             <span>Dashboard</span>
           </Link>
           <Link
-            href="/protected/all-routes"
+            href="/protected/add-route"
             className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
           >
-            <Route size={20} />
-            <span>Routes</span>
+            <PlusCircle size={20} />
+            <span>Add Route</span>
+          </Link>
+          <Link
+            href="/protected/community-routes"
+            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
+          >
+            <Users size={20} />
+            <span>Community</span>
           </Link>
           <button
             onClick={() => setOpen(true)}

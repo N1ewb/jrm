@@ -56,6 +56,9 @@ const adminLinks = (
     <SidebarLink href="/protected">Settings &amp; Notifications</SidebarLink>
     <SectionLabel label="Admin" />
     <SidebarLink href="/protected/admin">Admin Dashboard</SidebarLink>
+    <SidebarLink href="/protected/admin/flagged-content">Flagged Content</SidebarLink>
+    <SidebarLink href="/protected/admin/moderation">Moderation</SidebarLink>
+    <SidebarLink href="/protected/admin/appeals">Appeals</SidebarLink>
     <SectionLabel label="Community" />
     <SidebarLink href="/protected/support">Support Us</SidebarLink>
   </>

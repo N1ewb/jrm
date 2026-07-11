@@ -12,6 +12,9 @@ import {
   Settings,
   ClipboardList,
   Shield,
+  ShieldAlert,
+  Flag,
+  MessageCircle,
   Heart,
 } from "lucide-react";
 
@@ -171,6 +174,9 @@ function AdminItems({ pathname }: { pathname: string }) {
       </NavSection>
       <NavSection label="Admin">
         <NavItem href="/protected/admin" icon={Shield} label="Admin Dashboard" current={pathname === "/protected/admin"} />
+        <NavItem href="/protected/admin/flagged-content" icon={Flag} label="Flagged Content" current={pathname === "/protected/admin/flagged-content"} />
+        <NavItem href="/protected/admin/moderation" icon={ShieldAlert} label="Moderation" current={pathname === "/protected/admin/moderation"} />
+        <NavItem href="/protected/admin/appeals" icon={MessageCircle} label="Appeals" current={pathname === "/protected/admin/appeals"} />
       </NavSection>
       <NavSection label="Community">
         <NavItem href="/protected/support" icon={Heart} label="Support Us" current={pathname === "/protected/support"} />

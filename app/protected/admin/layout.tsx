@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { DrawerLink } from "@/components/drawer-link";
+import AdminMobileNav from "@/components/admin-mobile-nav";
 
 export default function AdminLayout({
   children,
@@ -61,6 +61,30 @@ export default function AdminLayout({
                 Admin Dashboard
               </DrawerLink>
             </li>
+            <li>
+              <DrawerLink
+                href="/protected/admin/flagged-content"
+                className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+              >
+                Flagged Content
+              </DrawerLink>
+            </li>
+            <li>
+              <DrawerLink
+                href="/protected/admin/moderation"
+                className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+              >
+                Moderation
+              </DrawerLink>
+            </li>
+            <li>
+              <DrawerLink
+                href="/protected/admin/appeals"
+                className="text-sm text-primary-foreground hover:bg-primary-foreground/10 active:bg-primary-foreground/20 rounded-lg"
+              >
+                Appeals
+              </DrawerLink>
+            </li>
             <li className="menu-title text-xs text-primary-foreground/60 mt-4 px-4">
               Community
             </li>
@@ -80,39 +104,7 @@ export default function AdminLayout({
         {children}
       </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-primary text-primary-foreground border-t border-primary-foreground/10">
-        <div className="flex justify-around items-center h-16 px-2">
-          <Link
-            href="/protected/admin"
-            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span>Dashboard</span>
-          </Link>
-          <Link
-            href="/protected/add-route"
-            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>Add Route</span>
-          </Link>
-          <Link
-            href="/protected/all-routes"
-            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Routes</span>
-          </Link>
-          <Link
-            href="/protected/review-routes"
-            className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span>Community</span>
-          </Link>
-        </div>
-      </nav>
+      <AdminMobileNav />
     </div>
   );
 }

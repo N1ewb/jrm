@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { moderateContent } from "@/lib/moderation";
 
 const RATE_LIMIT_SECONDS = 30;
 
@@ -39,6 +40,28 @@ export async function postComment(
   }
   if (trimmed.length > 2000) {
     return { error: "Comment is too long (max 2000 characters)" };
+  }
+
+  const moderation = moderateContent(trimmed);
+  if (!moderation.pass) {
+    await supabase.from("flagged_content").insert({
+      content_type: "discussion",
+      content_id: trimmed.slice(0, 100),
+      reason: `Auto-flagged: ${moderation.reason}`,
+      reported_by: user.id,
+      reporter_email: user.email,
+    });
+    return { error: "Your comment could not be posted. Please review our community guidelines." };
+  }
+
+  if (moderation.severity === "flag") {
+    await supabase.from("flagged_content").insert({
+      content_type: "discussion",
+      content_id: trimmed.slice(0, 100),
+      reason: `Auto-flagged: ${moderation.reason}`,
+      reported_by: user.id,
+      reporter_email: user.email,
+    });
   }
 
   // Rate limit: check last comment time

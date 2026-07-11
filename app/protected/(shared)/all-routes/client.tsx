@@ -29,6 +29,7 @@ import {
   Filter,
 } from "lucide-react";
 import VoteButtons from "@/components/vote-buttons";
+import ReportRouteButton from "@/components/report-route-button";
 import CommentThread from "@/components/comment-thread";
 import type { CommentRow } from "@/actions/discussion.actions";
 
@@ -397,6 +398,7 @@ export function AllRoutesClient({ routes, myVotes: initialMyVotes }: Props) {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2 pt-2">
+                <ReportRouteButton routeId={selected.id} />
                 {isPending && isAdmin && (
                   <>
                     <Button

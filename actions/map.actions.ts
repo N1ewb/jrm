@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { moderateRouteName, moderateRouteDescription, detectObscenePattern } from "@/lib/moderation";
 
 const OSRM_BASE = "https://router.project-osrm.org";
 
@@ -25,6 +26,21 @@ export async function saveRoute(input: SaveRouteInput) {
     return { error: "You must be signed in to submit a route" };
   }
 
+  const nameCheck = moderateRouteName(input.line);
+  if (!nameCheck.pass) {
+    return { error: "Route name contains prohibited content. Please review our community guidelines." };
+  }
+
+  const startCheck = moderateRouteDescription(input.startPoint);
+  if (!startCheck.pass) {
+    return { error: "Route description contains prohibited content. Please review our community guidelines." };
+  }
+
+  const patternCheck = detectObscenePattern(input.waypoints);
+  if (patternCheck.isObscene && patternCheck.confidence > 0.9) {
+    return { error: "Your route was flagged by our safety system. Contact support if you believe this is an error." };
+  }
+
   const { error } = await supabase.from("routes").insert({
     user_id: user.id,
     author_email: user.email,
@@ -42,6 +58,16 @@ export async function saveRoute(input: SaveRouteInput) {
   if (error) {
     console.error("Failed to save route:", error);
     return { error: "Failed to save route. Please try again." };
+  }
+
+  if (patternCheck.isObscene) {
+    await supabase.from("flagged_content").insert({
+      content_type: "route",
+      content_id: input.line,
+      reason: `Auto-flagged: Obscene pattern detected (confidence: ${Math.round(patternCheck.confidence * 100)}%)`,
+      reported_by: user.id,
+      reporter_email: user.email,
+    });
   }
 
   return { success: true };

@@ -45,6 +45,7 @@ export default function LandmarkDetailPage() {
   const [routeStart, setRouteStart] = useState("");
   const [submittingRoute, setSubmittingRoute] = useState(false);
   const [imagesHidden, setImagesHidden] = useState(false);
+  const [activeRouteId, setActiveRouteId] = useState<string | null>(null);
 
   useEffect(() => {
     const match = document.cookie.match(/(?:^|;\s*)user-role=([^;]*)/);
@@ -147,6 +148,59 @@ export default function LandmarkDetailPage() {
     return () => { map.remove(); mapInstance.current = null; };
   }, [landmark]);
 
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map || routes.length === 0) return;
+
+    const topRoute = routes.length > 0
+      ? [...routes].sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes))[0]
+      : null;
+
+    const routeToDraw = activeRouteId
+      ? routes.find((r) => r.id === activeRouteId)
+      : topRoute;
+
+    if (!routeToDraw || routeToDraw.waypoints.length < 2) return;
+
+    try {
+      if (map.getLayer("route-line")) map.removeLayer("route-line");
+      if (map.getSource("route-source")) map.removeSource("route-source");
+    } catch {}
+
+    map.addSource("route-source", {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: routeToDraw.waypoints,
+        },
+      },
+    });
+
+    map.addLayer({
+      id: "route-line",
+      type: "line",
+      source: "route-source",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": "#5000BD",
+        "line-width": 4,
+        "line-opacity": 0.8,
+      },
+    });
+
+    if (routeToDraw.waypoints.length >= 2) {
+      const bounds = routeToDraw.waypoints.reduce(
+        (b, c) => b.extend(c),
+        new maplibregl.LngLatBounds(routeToDraw.waypoints[0], routeToDraw.waypoints[0]),
+      );
+      if (landmark) bounds.extend([landmark.lng, landmark.lat]);
+      map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 });
+    }
+  }, [routes, activeRouteId, landmark]);
+
   const handleLandmarkVote = useCallback(async (vote: -1 | 0 | 1) => {
     if (!id) return;
     try {
@@ -201,6 +255,16 @@ export default function LandmarkDetailPage() {
     }
   }, [id, imagesHidden]);
 
+  const recommendedRoute = routes.length > 0
+    ? [...routes].sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes))[0]
+    : null;
+
+  const categoryLabel = landmark
+    ? (LANDMARK_CATEGORIES.find((c) => c === landmark.category)
+        ? landmark.category.charAt(0).toUpperCase() + landmark.category.slice(1)
+        : landmark.category)
+    : "";
+
   if (!id) {
     return (
       <div className="w-full flex flex-col items-center justify-center py-20 text-center">
@@ -232,14 +296,6 @@ export default function LandmarkDetailPage() {
       </div>
     );
   }
-
-  const recommendedRoute = routes.length > 0
-    ? [...routes].sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes))[0]
-    : null;
-
-  const categoryLabel = LANDMARK_CATEGORIES.find((c) => c === landmark.category)
-    ? landmark.category.charAt(0).toUpperCase() + landmark.category.slice(1)
-    : landmark.category;
 
   return (
     <div className="w-full pb-20 lg:pb-6 space-y-6">
@@ -470,7 +526,15 @@ export default function LandmarkDetailPage() {
           ) : (
             <div className="space-y-2">
               {routes.map((route) => (
-                <div key={route.id} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                <div
+                  key={route.id}
+                  className={`flex items-start justify-between gap-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                    activeRouteId === route.id
+                      ? "bg-primary/5 border-primary/30"
+                      : "bg-muted/30 border-border/50 hover:bg-muted/50"
+                  }`}
+                  onClick={() => setActiveRouteId(activeRouteId === route.id ? null : route.id)}
+                >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{route.title}</p>
                     {route.description && (

@@ -290,6 +290,28 @@ export async function getLandmarkRoutes(
   return { routes: (data ?? []) as LandmarkRouteRow[] };
 }
 
+export async function getLandmarkRouteCounts(
+  landmarkIds: string[],
+): Promise<Record<string, number>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("landmark_routes")
+      .select("landmark_id")
+      .in("landmark_id", landmarkIds);
+
+    if (error) return {};
+    const counts: Record<string, number> = {};
+    for (const id of landmarkIds) counts[id] = 0;
+    for (const row of data ?? []) {
+      counts[row.landmark_id] = (counts[row.landmark_id] ?? 0) + 1;
+    }
+    return counts;
+  } catch {
+    return {};
+  }
+}
+
 export async function voteLandmarkRoute(
   routeId: string,
   vote: -1 | 0 | 1,

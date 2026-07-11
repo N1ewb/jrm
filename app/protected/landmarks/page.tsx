@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
-  MapPin, Search, Filter, ThumbsUp, ThumbsDown, Plus, Loader2,
+  MapPin, Search, Filter, ThumbsUp, ThumbsDown, Plus, Loader2, Route,
 } from "lucide-react";
 import {
   Card, CardContent,
@@ -20,18 +20,23 @@ export default function LandmarksListPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [myVotes, setMyVotes] = useState<Record<string, -1 | 0 | 1>>({});
+  const [routeCounts, setRouteCounts] = useState<Record<string, number>>({});
 
   const fetchLandmarks = useCallback(async () => {
     setLoading(true);
     try {
-      const { getLandmarks, getMyLandmarkVotes } = await import("@/actions/landmark.actions");
+      const { getLandmarks, getMyLandmarkVotes, getLandmarkRouteCounts } = await import("@/actions/landmark.actions");
       const result = await getLandmarks({ status: "active" });
       if ("landmarks" in result) {
         setLandmarks(result.landmarks);
         const ids = result.landmarks.map((l) => l.id);
         if (ids.length > 0) {
-          const votes = await getMyLandmarkVotes(ids);
+          const [votes, counts] = await Promise.all([
+            getMyLandmarkVotes(ids),
+            getLandmarkRouteCounts(ids),
+          ]);
           setMyVotes(votes);
+          setRouteCounts(counts);
         }
       }
     } catch (err) {
@@ -190,6 +195,10 @@ export default function LandmarksListPage() {
                         <span className="flex items-center gap-1">
                           <ThumbsDown size={12} className="text-destructive" />
                           {landmark.downvotes}
+                        </span>
+                        <span className="flex items-center gap-1 text-muted-foreground/60">
+                          <Route size={12} />
+                          {routeCounts[landmark.id] ?? 0}
                         </span>
                       </span>
                       <span>{new Date(landmark.created_at).toLocaleDateString()}</span>

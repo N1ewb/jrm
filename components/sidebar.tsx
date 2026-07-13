@@ -16,6 +16,9 @@ import {
   Flag,
   MessageCircle,
   Heart,
+  Landmark,
+  MapPin,
+  TrendingUp,
 } from "lucide-react";
 
 function NavItem({
@@ -154,6 +157,14 @@ function UserItems({ pathname }: { pathname: string }) {
         <NavItem href="/protected/add-route" icon={PlusCircle} label="Submit a Route" current={pathname === "/protected/add-route"} />
         <NavItem href="/protected/community-routes" icon={Users} label="Community Routes" current={pathname === "/protected/community-routes"} />
       </NavSection>
+      <NavSection label="Landmarks">
+        <NavItem href="/protected/landmarks" icon={Landmark} label="Landmarks" current={pathname === "/protected/landmarks"} />
+        <NavItem href="/protected/add-landmark" icon={MapPin} label="Add Landmark" current={pathname === "/protected/add-landmark"} />
+      </NavSection>
+      <NavSection label="Discover">
+        <NavItem href="/protected/favorites" icon={Heart} label="Favorites" current={pathname === "/protected/favorites"} />
+        <NavItem href="/protected/trending" icon={TrendingUp} label="Trending" current={pathname === "/protected/trending"} />
+      </NavSection>
       <NavSection label="Account">
         <NavItem href="/protected" icon={Settings} label="Settings & Notifications" current={pathname === "/protected"} />
       </NavSection>
@@ -168,6 +179,10 @@ function AdminItems({ pathname }: { pathname: string }) {
         <NavItem href="/protected/add-route" icon={PlusCircle} label="Add Route" current={pathname === "/protected/add-route"} />
         <NavItem href="/protected/all-routes" icon={Route} label="All Routes" current={pathname === "/protected/all-routes"} />
         <NavItem href="/protected/review-routes" icon={ClipboardList} label="Review Community Routes" current={pathname === "/protected/review-routes"} />
+      </NavSection>
+      <NavSection label="Discover">
+        <NavItem href="/protected/favorites" icon={Heart} label="Favorites" current={pathname === "/protected/favorites"} />
+        <NavItem href="/protected/trending" icon={TrendingUp} label="Trending" current={pathname === "/protected/trending"} />
       </NavSection>
       <NavSection label="Account">
         <NavItem href="/protected" icon={Settings} label="Settings & Notifications" current={pathname === "/protected"} />

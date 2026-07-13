@@ -45,6 +45,9 @@ const userLinks = (
     <SidebarLink href="/protected/add-landmark">
       Add Landmark
     </SidebarLink>
+    <SectionLabel label="Discover" />
+    <SidebarLink href="/protected/favorites">Favorites</SidebarLink>
+    <SidebarLink href="/protected/trending">Trending</SidebarLink>
     <SectionLabel label="Account" />
     <SidebarLink href="/protected">Settings &amp; Notifications</SidebarLink>
   </>
@@ -58,6 +61,9 @@ const adminLinks = (
     <SidebarLink href="/protected/admin/review-queue">
       Review Queue
     </SidebarLink>
+    <SectionLabel label="Discover" />
+    <SidebarLink href="/protected/favorites">Favorites</SidebarLink>
+    <SidebarLink href="/protected/trending">Trending</SidebarLink>
     <SectionLabel label="Account" />
     <SidebarLink href="/protected">Settings &amp; Notifications</SidebarLink>
     <SectionLabel label="Admin" />

@@ -17,6 +17,7 @@ import {
   MapPin,
   Menu,
   X,
+  TrendingUp,
 } from "lucide-react";
 
 function NavItem({
@@ -102,6 +103,20 @@ function AdminSidebar({ pathname }: { pathname: string }) {
           current={isActive("/protected/add-landmark")}
         />
       </NavSection>
+      <NavSection label="Discover">
+        <NavItem
+          href="/protected/favorites"
+          icon={Heart}
+          label="Favorites"
+          current={isActive("/protected/favorites")}
+        />
+        <NavItem
+          href="/protected/trending"
+          icon={TrendingUp}
+          label="Trending"
+          current={isActive("/protected/trending")}
+        />
+      </NavSection>
       <NavSection label="Account">
         <NavItem
           href="/protected/settings"
@@ -172,6 +187,20 @@ function UserSidebar({ pathname }: { pathname: string }) {
           icon={MapPin}
           label="Add Landmark"
           current={isActive("/protected/add-landmark")}
+        />
+      </NavSection>
+      <NavSection label="Discover">
+        <NavItem
+          href="/protected/favorites"
+          icon={Heart}
+          label="Favorites"
+          current={isActive("/protected/favorites")}
+        />
+        <NavItem
+          href="/protected/trending"
+          icon={TrendingUp}
+          label="Trending"
+          current={isActive("/protected/trending")}
         />
       </NavSection>
       <NavSection label="Account">
@@ -280,20 +309,6 @@ export default function AppShell({
               <span>Home</span>
             </Link>
             <Link
-              href="/protected/add-route"
-              className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-            >
-              <PlusCircle size={20} />
-              <span>Add Route</span>
-            </Link>
-            <Link
-              href="/protected/landmarks"
-              className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-            >
-              <Landmark size={20} />
-              <span>Landmarks</span>
-            </Link>
-            <Link
               href="/protected/all-routes"
               className="flex flex-col items-center gap-0.5 text-[10px] font-medium"
             >
@@ -307,6 +322,15 @@ export default function AppShell({
               <Users size={20} />
               <span>Community</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center gap-0.5 text-[10px] font-medium text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+              <span>Menu</span>
+            </button>
           </div>
         </nav>
       )}

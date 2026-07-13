@@ -4,15 +4,20 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Crosshair, X } from "lucide-react";
+import { Crosshair, Heart } from "lucide-react";
 import PlaceSearch from "@/components/place-search";
 import RouteSuggestions from "@/components/route-suggestions";
 import LocationDeniedOverlay from "@/components/location-denied-overlay";
 import BottomInfoBar from "@/components/bottom-info-bar";
+import PlaceImages from "@/components/place-images";
+import TrendingDestinations from "@/components/trending-destinations";
+import RecentSearches from "@/components/recent-searches";
+import { useFavorites } from "@/hooks/use-favorites";
 import { getActiveRoutes, type RouteRow } from "@/actions/route.actions";
 import { findNearbyRoutes, findRouteTransfers, type NearbyRoute } from "@/lib/route-calc";
 import { findMultiHopRoutes, type MultiHopJourney } from "@/lib/pathfinding";
 import { ILIGAN_LANDMARKS } from "@/lib/iligan-landmarks";
+import { JEEPNEY_STOPS } from "@/lib/jeepney-stops";
 import type { PlaceResult } from "@/lib/geocoding";
 
 const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
@@ -244,6 +249,32 @@ export default function UserDashboard() {
           "text-halo-width": 1,
         },
       });
+
+      // Known jeepney stops
+      map.addSource("jeepney-stops-source", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: JEEPNEY_STOPS.map((stop) => ({
+            type: "Feature",
+            properties: { name: stop.name, routes: stop.routes.join(", ") },
+            geometry: { type: "Point", coordinates: [stop.lng, stop.lat] },
+          })),
+        },
+      });
+
+      map.addLayer({
+        id: "jeepney-stops-layer",
+        type: "circle",
+        source: "jeepney-stops-source",
+        paint: {
+          "circle-radius": 4,
+          "circle-color": "#22C55E",
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-opacity": 0.8,
+        },
+      });
     });
 
     mapInstance.current = map;
@@ -465,6 +496,21 @@ export default function UserDashboard() {
     [flyTo, updateRoutesOnMap, position],
   );
 
+  const handleSelectTrending = useCallback(
+    (name: string, lat: number, lng: number) => {
+      handleSelectPlace({
+        osmId: "",
+        osmType: "",
+        displayName: name,
+        lat,
+        lng,
+        type: "",
+        category: "",
+      });
+    },
+    [handleSelectPlace],
+  );
+
   const handleClearPlace = useCallback(() => {
     setSelectedPlace(null);
     setNearbyRoutes([]);
@@ -577,6 +623,13 @@ export default function UserDashboard() {
         )}
       </div>
 
+      {/* Place image */}
+      {selectedPlace && (
+        <div className="w-full max-w-2xl mx-auto px-4 pt-4">
+          <PlaceImages placeName={selectedPlace.displayName.split(",")[0]} />
+        </div>
+      )}
+
       {/* Content section — scrollable below the map */}
       <div className="w-full max-w-2xl mx-auto px-4 py-5 space-y-4">
         {!hasPosition && !selectedPlace && (
@@ -614,6 +667,20 @@ export default function UserDashboard() {
           </div>
         )}
 
+        {!selectedPlace && (
+          <>
+            <TrendingDestinations onSelect={handleSelectTrending} />
+            <FavoritesSection onSelect={handleSelectTrending} />
+            <RecentSearches
+              onSelect={(query, lat, lng) => {
+                if (lat !== null && lng !== null) {
+                  handleSelectTrending(query, lat, lng);
+                }
+              }}
+            />
+          </>
+        )}
+
         {selectedPlace && (
             <RouteSuggestions
               routes={nearbyRoutes}
@@ -642,6 +709,59 @@ export default function UserDashboard() {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+function FavoritesSection({
+  onSelect,
+}: {
+  onSelect: (name: string, lat: number, lng: number) => void;
+}) {
+  const { favoritePlaces, removeFavorite } = useFavorites();
+
+  if (favoritePlaces.length === 0) return null;
+
+  return (
+    <div className="bg-card rounded-xl shadow-lg border border-border/50 overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
+        <Heart size={16} className="text-red-500" />
+        <p className="text-sm font-semibold text-foreground">
+          Favorite Places
+        </p>
+        <span className="text-xs text-muted-foreground ml-auto">
+          {favoritePlaces.length} saved
+        </span>
+      </div>
+
+      <ul className="divide-y divide-border/50">
+        {favoritePlaces.slice(0, 5).map((place) => (
+          <li key={place.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(place.name, place.lat, place.lng)}
+              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
+                <Heart size={12} className="text-red-500 fill-red-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-foreground truncate">{place.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFavorite("place", place.id);
+                }}
+                className="text-xs text-muted-foreground hover:text-destructive transition-colors shrink-0"
+              >
+                Remove
+              </button>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
 import type { NearbyRoute } from "@/lib/route-calc";
 import type { MultiHopJourney } from "@/lib/pathfinding";
 import VoteButtons from "@/components/vote-buttons";
+import FavoritesButton from "@/components/favorites-button";
 
 interface RouteSuggestionsProps {
   routes: NearbyRoute[];
@@ -116,6 +117,12 @@ function RouteCardCollapsed({
         </div>
 
         <div className="shrink-0 flex items-center gap-1">
+          <div onClick={(e) => e.stopPropagation()}>
+            <FavoritesButton
+              item={{ type: "route", id: route.id, line: route.line, savedAt: Date.now() }}
+              size={14}
+            />
+          </div>
           <div onClick={(e) => e.stopPropagation()}>
             <VoteButtons
               routeId={route.id}
